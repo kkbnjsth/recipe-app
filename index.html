@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>วันนี้ทำอะไรกิน</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f5fafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c1919" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ทำอะไรกิน">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="icon" href="icon-192.png?v=1">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one mobile column, two views (ของที่มี / เมนู) switched by a floating nav capsule.
+   Colours: the app's own teal palette. Components: ChaiJaai-style — borderless white cards with a soft shadow,
+   inverted (ink) selected states, one gradient hero card, grouped lists; teal = ทำได้เลย, orange = ขาดอีกนิด */
+:root {
+  --bg: #f5fafa;
+  --surface: #ffffff;
+  --ink: #10666d;
+  --ink-muted: #5b9ca2;
+  --ink-faint: #9dc6c9;
+  --primary: #59c9c9;
+  --primary-dark: #35838a;
+  --primary-light: #b0ebe1;
+  --accent: #c96a22;
+  --accent-light: #fce9d6;
+  --danger: #d64545;
+  --line: #c8e6e8;
+  --line-soft: #eaf4f5;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-edge: rgba(255, 255, 255, 0.85);
+  --scrim: rgba(16, 60, 64, 0.32);
+  --shadow-card: 0 1px 2px rgba(16, 102, 109, 0.05), 0 4px 16px rgba(16, 102, 109, 0.07);
+  --shadow-nav: 0 10px 28px -8px rgba(31, 42, 36, 0.22), 0 2px 6px rgba(31, 42, 36, 0.06);
+
+  --c-meat: #c1544a;
+  --c-sea: #3f8fa0;
+  --c-dairy: #4a7fb5;
+  --c-tofu: #8f7a35;
+  --c-veg: #3f7a5c;
+  --c-herb: #5e8c3a;
+  --c-fruit: #c97db0;
+  --c-grain: #a0784a;
+  --c-season: #b58a3f;
+  --c-other: #6b7a70;
+
+  --font-body: "Poppins", "IBM Plex Sans Thai", "Thonburi", "Leelawadee UI", sans-serif;
+  --font-num: "Poppins", "IBM Plex Sans Thai", sans-serif;
+  --radius-card: 20px;
+  --radius-tag: 10px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1919; --surface: #132526;
+    --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
+    --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
+    --accent: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+    --line: #24403f; --line-soft: #1a3132;
+    --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
+    --scrim: rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-nav: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
+    --c-meat: #e07b71; --c-sea: #6cbccd; --c-dairy: #7fa9db; --c-tofu: #c9b067; --c-veg: #6fb38f;
+    --c-herb: #93c06b; --c-fruit: #dd9cc8; --c-grain: #cba076; --c-season: #d6ad62; --c-other: #98a89e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1919; --surface: #132526;
+  --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
+  --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
+  --accent: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+  --line: #24403f; --line-soft: #1a3132;
+  --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-nav: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
+  --c-meat: #e07b71; --c-sea: #6cbccd; --c-dairy: #7fa9db; --c-tofu: #c9b067; --c-veg: #6fb38f;
+  --c-herb: #93c06b; --c-fruit: #dd9cc8; --c-grain: #cba076; --c-season: #d6ad62; --c-other: #98a89e;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; text-wrap: balance; }
+.head .sub { margin: 1px 0 0; font-size: 12px; color: var(--ink-muted); }
+.sync {
+  width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-card);
+  color: var(--ink); cursor: pointer;
+  transition: transform 140ms var(--ease-out);
+}
+.sync:active { transform: scale(0.94); }
+.sync svg { width: 18px; height: 18px; }
+.sync.spin svg { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Notice banner */
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; border-radius: var(--radius-card);
+  background: var(--accent-light); color: var(--ink); font-size: 14px;
+}
+.notice .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
+.notice p { margin: 0; }
+.notice button {
+  margin-top: 8px; padding: 6px 12px; border-radius: var(--radius-tag);
+  border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+}
+
+/* Card surface: borderless white, soft shadow */
+.card {
+  position: relative;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+/* Hero: the one colourful card — deep teal into the light brand teal, white text on the dark side */
+.hero {
+  position: relative; overflow: hidden;
+  padding: 18px 18px 16px; border-radius: 24px; color: #fff;
+  background:
+    linear-gradient(90deg, rgba(6, 48, 52, 0.34) 0%, rgba(6, 48, 52, 0.26) 45%, rgba(6, 48, 52, 0) 82%),
+    linear-gradient(118deg, #0b4f55 0%, #10666d 40%, #59c9c9 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+.hero .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.hero .lbl { font-size: 13px; font-weight: 500; opacity: 0.95; }
+.hero .of { font-size: 12px; opacity: 0.85; }
+.hero .amt { margin: 2px 0 14px; font-family: var(--font-num); font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+.hero .amt small { font-family: var(--font-body); font-size: 15px; font-weight: 500; letter-spacing: 0; margin-left: 4px; }
+.hero .split { display: flex; gap: 10px; }
+.hero .split button {
+  flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+  padding: 10px 13px; border: 0; border-radius: 16px; cursor: pointer; text-align: left;
+  background: rgba(255, 255, 255, 0.92); color: #14171a; text-shadow: none;
+  transition: transform 140ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.hero .split button:active { transform: scale(0.97); }
+.hero .split button[aria-current="page"] { background: #fff; box-shadow: inset 0 0 0 2px #10666d; }
+.hero .split small { font-size: 12px; color: #5b9ca2; }
+.hero .split b { color: #10666d; }
+.hero .split b { font-family: var(--font-num); font-size: 18px; font-weight: 600; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.hero .split .almost b { color: #c96a22; }
+
+/* View container */
+.view { display: flex; flex-direction: column; gap: 16px; }
+.view.from-right { animation: inR 240ms var(--ease-out); }
+.view.from-left { animation: inL 240ms var(--ease-out); }
+@keyframes inR { from { opacity: 0; transform: translateX(22px); } }
+@keyframes inL { from { opacity: 0; transform: translateX(-22px); } }
+
+/* Search */
+.search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px; height: 46px; border-radius: 999px;
+  background: var(--surface); border: 1.5px solid transparent; box-shadow: var(--shadow-card);
+}
+.search svg { width: 18px; height: 18px; color: var(--ink-faint); flex-shrink: 0; }
+.search input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font: inherit; color: var(--ink);
+}
+.search input::placeholder { color: var(--ink-faint); }
+.search:focus-within { border-color: var(--primary); }
+
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.picked { font-size: 13px; color: var(--ink-muted); }
+.link-btn {
+  border: 0; background: none; padding: 4px 2px; cursor: pointer;
+  font-size: 13px; color: var(--primary-dark); font-weight: 600;
+}
+.link-btn:disabled { color: var(--ink-faint); cursor: default; }
+
+/* Ingredient groups */
+.group { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.group h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.group h2 .cdot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.group h2 .count { margin-left: auto; font-family: var(--font-num); font-size: 12px; color: var(--ink-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 38px; padding: 7px 14px; border-radius: 999px;
+  border: 0; background: var(--line-soft);
+  font-size: 14px; cursor: pointer;
+  transition: transform 140ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+.chip:active { transform: scale(0.95); }
+.chip .tick {
+  width: 14px; height: 14px; margin-left: -2px; display: none;
+}
+.chip[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--c) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, transparent);
+  font-weight: 600;
+}
+.chip[aria-pressed="true"] .tick { display: block; color: var(--c); }
+.chip:focus-visible, .menu-card:focus-visible, .nav button:focus-visible, .filter:focus-visible, .sync:focus-visible, .hero .split button:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+
+/* Filters */
+.filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin: -2px -2px -6px; scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.filter {
+  flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: 0;
+  background: var(--surface); box-shadow: var(--shadow-card);
+  font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap;
+}
+.filter[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+
+/* Menu sections */
+.section-head { display: flex; align-items: center; gap: 8px; margin: 6px 4px -6px; }
+.section-head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.section-head .count {
+  min-width: 22px; height: 20px; padding: 0 7px; border-radius: 999px; display: grid; place-items: center;
+  font-family: var(--font-num); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.section-head.ready .count { background: var(--primary-light); color: var(--primary-dark); }
+.section-head.almost .count { background: var(--accent-light); color: var(--accent); }
+
+/* Menu rows: one grouped card per section, hairline dividers inset past the badge */
+.list { overflow: hidden; }
+.menu-card {
+  position: relative;
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 68px; padding: 12px 14px; border: 0; background: transparent;
+  text-align: left; cursor: pointer;
+  transition: background-color 140ms var(--ease-out);
+}
+.menu-card + .menu-card::before {
+  content: ""; position: absolute; top: 0; left: 66px; right: 0; height: 1px; background: var(--line-soft);
+}
+.menu-card:active { background: var(--line-soft); }
+.menu-card .badge {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: grid; place-items: center;
+  font-family: var(--font-num); font-weight: 600; font-size: 15px;
+}
+.menu-card.ready .badge { background: var(--primary-light); color: var(--primary-dark); }
+.menu-card.almost .badge { background: var(--accent-light); color: var(--accent); }
+.menu-card.ready .badge svg { width: 20px; height: 20px; }
+.menu-card .body { flex: 1; min-width: 0; }
+.menu-card .body { display: flex; flex-direction: column; }
+.menu-card .name { font-weight: 600; font-size: 15px; line-height: 1.35; }
+.menu-card .meta { font-size: 12px; color: var(--ink-muted); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
+.menu-card .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.menu-card .meta svg { width: 12px; height: 12px; }
+.menu-card .need { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-muted); }
+.menu-card .need .miss {
+  padding: 1px 9px; border-radius: 999px; font-weight: 500;
+  background: var(--accent-light); color: var(--accent);
+}
+.menu-card .swap { margin-top: 6px; font-size: 12.5px; color: var(--ink-muted); }
+.menu-card .chev { width: 16px; height: 16px; color: var(--ink-faint); flex-shrink: 0; }
+
+.empty {
+  padding: 28px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.empty h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.empty p { margin: 0; font-size: 14px; color: var(--ink-muted); max-width: 32ch; }
+.empty button {
+  margin-top: 6px; padding: 10px 20px; border: 0; border-radius: 999px;
+  background: var(--ink); color: var(--bg); font-weight: 600; cursor: pointer;
+}
+.skeleton { height: 64px; border-radius: var(--radius-card); background: var(--line-soft); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+/* Floating nav capsule */
+.nav {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex; gap: 4px; padding: 5px; border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-nav);
+  z-index: 20;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nav { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
+}
+.nav button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border: 0; border-radius: 999px; background: transparent;
+  font-size: 14px; font-weight: 500; color: var(--ink-muted); cursor: pointer; white-space: nowrap;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+}
+.nav button[aria-current="page"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.nav .pill {
+  min-width: 20px; padding: 0 6px; height: 20px; border-radius: 999px;
+  display: grid; place-items: center; font-family: var(--font-num); font-size: 12px; font-weight: 600;
+  background: var(--primary-light); color: var(--primary-dark);
+}
+.nav button[aria-current="page"] .pill { background: var(--primary); color: #0c1919; }
+
+/* Detail sheet */
+.scrim {
+  position: fixed; inset: 0; background: var(--scrim); z-index: 30;
+  opacity: 0; transition: opacity 220ms var(--ease-out);
+}
+.scrim.open { opacity: 1; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
+  max-width: 560px; margin: 0 auto; max-height: 88%;
+  display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 32px -12px rgba(0, 0, 0, 0.25);
+  transform: translateY(100%); transition: transform 300ms var(--ease-out);
+}
+.sheet.open { transform: translateY(0); }
+.sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 10px auto 0; flex-shrink: 0; }
+.sheet .scroll {
+  overflow-y: auto; overscroll-behavior: contain;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-block: 12px calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 18px;
+}
+.sheet h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
+.sheet .status { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.sheet .status.ready { background: var(--primary-light); color: var(--primary-dark); }
+.sheet .status.almost, .sheet .status.far { background: var(--accent-light); color: var(--accent); }
+.sheet .facts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-radius: 16px; background: var(--line-soft); }
+.sheet .fact { padding: 10px 14px; min-width: 0; }
+.sheet .fact + .fact { border-left: 1px solid var(--line); }
+.sheet .fact small { display: block; font-size: 11.5px; color: var(--ink-muted); }
+.sheet .fact b { display: block; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.ing-list { list-style: none; margin: 0; padding: 0; }
+.ing-list li:last-child { border-bottom: 0; }
+.ing-list li {
+  display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start;
+  padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+}
+.ing-list .st { width: 18px; height: 18px; margin-top: 2px; }
+.ing-list .have .st { color: var(--primary-dark); }
+.ing-list .miss .st { color: var(--accent); }
+.ing-list .skip .st, .ing-list .skip .n { color: var(--ink-faint); }
+.ing-list .n { min-width: 0; }
+.ing-list .sub { display: block; font-size: 12px; color: var(--ink-muted); }
+.ing-list .miss .sub { color: var(--accent); }
+.ing-list .q { font-family: var(--font-num); font-size: 13px; color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.steps { margin: 0; white-space: pre-line; font-size: 15px; line-height: 1.7; }
+.src {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--primary-dark); font-weight: 600;
+  text-decoration: none; word-break: break-all;
+}
+.src svg { width: 14px; height: 14px; flex-shrink: 0; }
+.note { margin: 0; font-size: 14px; color: var(--ink-muted); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 3px 11px; border-radius: 999px; background: var(--line-soft); font-size: 12px; color: var(--ink-muted); }
+
+/* Google sign-in screen (covers everything until there is a live ID token) */
+.login {
+  position: fixed; inset: 0; z-index: 50; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px 16px; text-align: center;
+}
+.login[hidden] { display: none; }
+.login img { width: 88px; height: 88px; border-radius: 22px; box-shadow: var(--shadow-card); }
+.login h2 { margin: 4px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+.login p { margin: 0; max-width: 300px; font-size: 14px; color: var(--ink-muted); }
+.login #gbtn { min-height: 44px; margin-top: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .view.from-right, .view.from-left, .sync.spin svg, .skeleton { animation: none; }
+  .sheet, .scrim { transition: opacity 150ms linear; }
+  .sheet { transform: none; opacity: 0; }
+  .sheet.open { opacity: 1; }
+  .chip, .menu-card, .sync { transition: none; }
+  .chip:active, .menu-card:active, .sync:active { transform: none; }
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>วันนี้ทำอะไรกิน</h1>
+      <p class="sub" id="syncLabel">กำลังโหลด</p>
+    </div>
+    <button class="sync" id="sync" type="button" aria-label="โหลดข้อมูลจากชีตใหม่">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
+    </button>
+  </header>
+
+  <div id="notice" hidden></div>
+
+  <section class="hero" aria-live="polite">
+    <div class="top"><span class="lbl">ทำได้เลยตอนนี้</span><span class="of">จากทั้งหมด <span class="num" id="sumTotal">–</span> เมนู</span></div>
+    <div class="amt"><span id="sumReady">0</span><small>เมนู</small></div>
+    <div class="split">
+      <button type="button" data-view="pantry" id="heroPantry"><small>ของที่มี</small><b id="sumPicked">0</b></button>
+      <button type="button" data-view="menus" id="heroMenus" class="almost"><small>ขาดอีกนิด</small><b id="sumAlmost">0</b></button>
+    </div>
+  </section>
+
+  <main id="view" class="view"></main>
+</div>
+
+<nav class="nav" aria-label="สลับหน้า">
+  <button type="button" id="navPantry" data-view="pantry">ของที่มี <span class="pill num" id="pillPantry">0</span></button>
+  <button type="button" id="navMenus" data-view="menus">เมนู <span class="pill num" id="pillMenus">0</span></button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="grab"></div>
+  <div class="scroll" id="sheetBody"></div>
+</div>
+
+<div class="login" id="login" hidden>
+  <img src="apple-touch-icon.png?v=1" alt="">
+  <h2>วันนี้ทำอะไรกิน</h2>
+  <p id="loginMsg">ล็อกอินด้วยบัญชี Google เพื่อดูสูตรของคุณ</p>
+  <div id="gbtn"></div>
+</div>
+
+<script>
+(() => {
+  // how many missing must-have ingredients still counts as "ขาดอีกนิด"
+  const ALMOST_MAX = 2;
+  const STORE_KEY = "recipe-finder:selected";
+
+  // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
+  const API_URL = "";
+  // OAuth client of the Google Cloud project "ChaiJaai" (authorised origin kkbnjsth.github.io); not a secret
+  const CLIENT_ID = "357323598002-heul0ai5997qh9qj9d79ek3gfeh1ab00.apps.googleusercontent.com";
+  const OWNER_EMAIL = "kkbnjsth@gmail.com";
+  const TOKEN_KEY = "recipe-finder:idt";
+
+  const TYPE_ORDER = [
+    ["เนื้อสัตว์", "--c-meat"],
+    ["อาหารทะเล", "--c-sea"],
+    ["ไข่และนม", "--c-dairy"],
+    ["เต้าหู้และถั่ว", "--c-tofu"],
+    ["ผัก", "--c-veg"],
+    ["สมุนไพรและเครื่องเทศ", "--c-herb"],
+    ["ผลไม้", "--c-fruit"],
+    ["ข้าวและเส้น", "--c-grain"],
+    ["เครื่องปรุง", "--c-season"],
+    ["อื่นๆ", "--c-other"],
+  ];
+  const TYPE_COLOR = Object.fromEntries(TYPE_ORDER);
+  const OTHER = "อื่นๆ";
+
+  const ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    miss: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5"/><path d="M12 16h.01"/></svg>',
+    skip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    bowl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  };
+
+  const state = {
+    raw: { recipes: null, rows: null, ingredients: null },
+    updatedAt: null,
+    loading: true,
+    notice: null, // {code, text, action?}
+    view: "pantry",
+    search: "",
+    cat: "ทั้งหมด",
+    selected: new Set(loadSelected()),
+    openRecipe: null,
+  };
+
+  // ---------- storage (per-viewer convenience only) ----------
+  function loadSelected() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; }
+  }
+  function saveSelected() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify([...state.selected])); } catch {}
+  }
+
+  // ---------- parsing ----------
+  const clean = (v) => (v == null ? "" : String(v).trim());
+  const splitList = (v) => clean(v).split(/[,，、]/).map((s) => s.trim()).filter(Boolean);
+  const toNum = (v) => { const n = parseFloat(clean(v)); return Number.isFinite(n) ? n : null; };
+  const toBool = (v) => v === true || /^(true|yes|1|✓)$/i.test(clean(v));
+
+  function model() {
+    const { recipes: R, rows: W, ingredients: I } = state.raw;
+    if (!R || !W || !I) return null;
+
+    const recipes = R.filter((r) => clean(r[0])).map((r) => ({
+      name: clean(r[0]),
+      cat: clean(r[1]) || OTHER,
+      tags: splitList(r[2]),
+      time: toNum(r[3]),
+      serves: toNum(r[4]),
+      steps: clean(r[5]),
+      link: clean(r[6]),
+      note: clean(r[7]),
+    }));
+
+    const byRecipe = new Map();
+    for (const r of W) {
+      const menu = clean(r[0]); const ing = clean(r[1]);
+      if (!menu || !ing) continue;
+      if (!byRecipe.has(menu)) byRecipe.set(menu, []);
+      byRecipe.get(menu).push({
+        name: ing,
+        qty: clean(r[2]),
+        unit: clean(r[3]),
+        optional: toBool(r[4]),
+        subs: splitList(r[5]),
+      });
+    }
+
+    const typeOf = new Map();
+    for (const r of I) { const n = clean(r[0]); if (n) typeOf.set(n, clean(r[1]) || OTHER); }
+    // anything named in a recipe but missing from the master list still gets a chip
+    for (const list of byRecipe.values()) {
+      for (const it of list) {
+        if (!typeOf.has(it.name)) typeOf.set(it.name, OTHER);
+        for (const s of it.subs) if (!typeOf.has(s)) typeOf.set(s, OTHER);
+      }
+    }
+    return { recipes, byRecipe, typeOf };
+  }
+
+  function evaluate(recipe, byRecipe) {
+    const items = (byRecipe.get(recipe.name) || []).map((it) => {
+      if (state.selected.has(it.name)) return { ...it, status: "have" };
+      const sub = it.subs.find((s) => state.selected.has(s));
+      if (sub) return { ...it, status: "have", usedSub: sub };
+      return { ...it, status: it.optional ? "skip" : "miss" };
+    });
+    const missing = items.filter((i) => i.status === "miss");
+    const swaps = items.filter((i) => i.usedSub);
+    let level = "far";
+    if (items.length && missing.length === 0) level = "ready";
+    else if (items.length && missing.length <= ALMOST_MAX) level = "almost";
+    return { recipe, items, missing, swaps, level };
+  }
+
+  // ---------- helpers ----------
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const $ = (id) => document.getElementById(id);
+  const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : null);
+  function metaHtml(r) {
+    const bits = [`<span>${esc(r.cat)}</span>`];
+    if (r.time != null) bits.push(`<span>${ICON.clock}<span class="num">${r.time}</span> นาที</span>`);
+    if (r.serves != null) bits.push(`<span>${ICON.bowl}<span class="num">${r.serves}</span> ที่</span>`);
+    return bits.join("");
+  }
+
+  // ---------- render ----------
+  let lastView = state.view;
+  function render() {
+    const m = model();
+    const results = m ? m.recipes.map((r) => evaluate(r, m.byRecipe)) : [];
+    const ready = results.filter((x) => x.level === "ready");
+    const almost = results.filter((x) => x.level === "almost");
+
+    $("sumPicked").textContent = state.selected.size;
+    $("sumReady").textContent = m ? ready.length : "–";
+    $("sumAlmost").textContent = m ? almost.length : "–";
+    $("sumTotal").textContent = m ? m.recipes.length : "–";
+    $("pillPantry").textContent = state.selected.size;
+    $("pillMenus").textContent = m ? ready.length : 0;
+
+    renderNotice();
+    renderSync();
+
+    $("navPantry").setAttribute("aria-current", state.view === "pantry" ? "page" : "false");
+    $("navMenus").setAttribute("aria-current", state.view === "menus" ? "page" : "false");
+    $("heroPantry").setAttribute("aria-current", state.view === "pantry" ? "page" : "false");
+    $("heroMenus").setAttribute("aria-current", state.view === "menus" ? "page" : "false");
+
+    const view = $("view");
+    if (lastView !== state.view) {
+      view.classList.remove("from-left", "from-right");
+      void view.offsetWidth;
+      view.classList.add(state.view === "menus" ? "from-right" : "from-left");
+      lastView = state.view;
+    }
+
+    if (!m) { view.innerHTML = loadingHtml(); return; }
+    view.innerHTML = state.view === "pantry" ? pantryHtml(m) : menusHtml(m, ready, almost);
+    if (state.view === "pantry") {
+      const input = $("q");
+      input.addEventListener("input", (e) => {
+        state.search = e.target.value;
+        const pos = e.target.selectionStart;
+        render();
+        const again = $("q"); again.focus(); again.setSelectionRange(pos, pos);
+      });
+    }
+    if (state.openRecipe) {
+      const hit = results.find((x) => x.recipe.name === state.openRecipe);
+      if (hit) fillSheet(hit); else closeSheet();
+    }
+  }
+
+  function loadingHtml() {
+    if (state.notice && !state.loading) {
+      return `<div class="card empty"><h3>ยังโหลดสูตรไม่ได้</h3><p>ดูวิธีแก้ในกล่องข้อความด้านบน แล้วกดปุ่มโหลดใหม่ที่มุมขวาบน</p></div>`;
+    }
+    return `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+  }
+
+  function pantryHtml(m) {
+    const q = state.search.trim().toLowerCase();
+    const groups = new Map();
+    for (const [name, type] of m.typeOf) {
+      if (q && !name.toLowerCase().includes(q)) continue;
+      const t = TYPE_COLOR[type] ? type : OTHER;
+      if (!groups.has(t)) groups.set(t, []);
+      groups.get(t).push(name);
+    }
+    const order = TYPE_ORDER.map(([t]) => t).filter((t) => groups.has(t));
+    const groupHtml = order.map((t) => {
+      const names = groups.get(t).sort((a, b) => a.localeCompare(b, "th"));
+      const on = names.filter((n) => state.selected.has(n)).length;
+      return `<section class="card group" style="--c: var(${TYPE_COLOR[t]})">
+        <h2><span class="cdot"></span>${esc(t)}<span class="count">${on}/${names.length}</span></h2>
+        <div class="chips">${names.map((n) => `<button type="button" class="chip" data-ing="${esc(n)}" aria-pressed="${state.selected.has(n)}">${ICON.check.replace("<svg", '<svg class="tick"')}${esc(n)}</button>`).join("")}</div>
+      </section>`;
+    }).join("");
+
+    const none = m.typeOf.size === 0
+      ? `<div class="card empty"><h3>ยังไม่มีวัตถุดิบในชีต</h3><p>เพิ่มวัตถุดิบในแท็บ "วัตถุดิบ" ของ Google Sheet แล้วกดโหลดใหม่</p></div>`
+      : `<div class="card empty"><h3>ไม่เจอ "${esc(state.search)}"</h3><p>ถ้ายังไม่มีในรายการ ให้เพิ่มในแท็บ "วัตถุดิบ" ของชีตก่อน</p></div>`;
+
+    return `
+      <label class="search" for="q">${ICON.search}<input id="q" type="search" placeholder="ค้นหาวัตถุดิบ" value="${esc(state.search)}" autocomplete="off"></label>
+      <div class="row-between">
+        <span class="picked">ติ๊กของที่มีในครัวตอนนี้ รวมเครื่องปรุงด้วย</span>
+        <button type="button" class="link-btn" id="clear" ${state.selected.size ? "" : "disabled"}>ล้างทั้งหมด</button>
+      </div>
+      ${order.length ? groupHtml : none}`;
+  }
+
+  function menusHtml(m, ready, almost) {
+    if (!m.recipes.length) {
+      return `<div class="card empty"><h3>ยังไม่มีสูตรในชีต</h3><p>เพิ่มเมนูในแท็บ "สูตร" และวัตถุดิบของเมนูในแท็บ "วัตถุดิบในสูตร" แล้วกดโหลดใหม่</p></div>`;
+    }
+    if (!state.selected.size) {
+      return `<div class="card empty"><h3>ยังไม่ได้บอกว่ามีอะไรบ้าง</h3><p>ติ๊กของที่มีในครัวก่อน แล้วหน้านี้จะบอกว่าทำเมนูไหนได้</p><button type="button" data-goto="pantry">ไปติ๊กของที่มี</button></div>`;
+    }
+    const cats = ["ทั้งหมด", ...new Set([...ready, ...almost].map((x) => x.recipe.cat))];
+    if (!cats.includes(state.cat)) state.cat = "ทั้งหมด";
+    const inCat = (x) => state.cat === "ทั้งหมด" || x.recipe.cat === state.cat;
+    const byTime = (a, b) => (a.recipe.time ?? 999) - (b.recipe.time ?? 999);
+    const r = ready.filter(inCat).sort(byTime);
+    const a = almost.filter(inCat).sort((x, y) => x.missing.length - y.missing.length || byTime(x, y));
+
+    const filters = cats.length > 2
+      ? `<div class="filters" role="group" aria-label="กรองตามหมวด">${cats.map((c) => `<button type="button" class="filter" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join("")}</div>`
+      : "";
+
+    const card = (x) => {
+      const extra = x.level === "almost"
+        ? `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`
+        : x.swaps.length
+          ? `<span class="swap">ใช้${x.swaps.map((i) => `${esc(i.usedSub)}แทน${esc(i.name)}`).join(", ")}</span>`
+          : "";
+      const badge = x.level === "ready" ? ICON.check : `−${x.missing.length}`;
+      return `<button type="button" class="menu-card ${x.level}" data-recipe="${esc(x.recipe.name)}">
+        <span class="badge" aria-hidden="true">${badge}</span>
+        <span class="body"><span class="name">${esc(x.recipe.name)}</span><span class="meta">${metaHtml(x.recipe)}</span>${extra}</span>
+        <span class="chev">${ICON.chev}</span>
+      </button>`;
+    };
+
+    const readyBlock = r.length
+      ? `<div class="card list">${r.map(card).join("")}</div>`
+      : `<div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูเมนูที่ขาดอีกนิดด้านล่าง" : ""}</p></div>`;
+    const almostBlock = a.length
+      ? `<div class="section-head almost"><h2>ขาดอีกนิด</h2><span class="count num">${a.length}</span></div>
+         <div class="card list">${a.map(card).join("")}</div>`
+      : "";
+
+    return `${filters}
+      <div class="section-head ready"><h2>ทำได้เลย</h2><span class="count num">${r.length}</span></div>
+      ${readyBlock}
+      ${almostBlock}`;
+  }
+
+  function renderNotice() {
+    const el = $("notice");
+    if (!state.notice) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.className = "notice";
+    el.innerHTML = `<span class="dot"></span><div><p>${esc(state.notice.text)}</p>${state.notice.action ? `<button type="button" id="noticeAction">${esc(state.notice.action)}</button>` : ""}</div>`;
+  }
+
+  function renderSync() {
+    const btn = $("sync");
+    btn.classList.toggle("spin", state.loading);
+    let label = "กำลังโหลด";
+    if (!state.loading) {
+      label = state.updatedAt
+        ? `อัปเดตล่าสุด ${new Date(state.updatedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`
+        : "ยังโหลดข้อมูลไม่ได้";
+    }
+    $("syncLabel").textContent = label;
+  }
+
+  // ---------- detail sheet ----------
+  let lastFocus = null;
+  function fillSheet(x) {
+    const r = x.recipe;
+    const rowHtml = (i) => {
+      const icon = i.status === "have" ? ICON.check : i.status === "miss" ? ICON.miss : ICON.skip;
+      let sub = "";
+      if (i.usedSub) sub = `ใช้${esc(i.usedSub)}แทน`;
+      else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map(esc).join(", ")} แทนได้`;
+      else if (i.status === "miss") sub = "ยังไม่มี";
+      else if (i.status === "skip") sub = "ไม่ใส่ก็ได้";
+      else if (i.optional) sub = "ไม่ใส่ก็ได้";
+      const q = [i.qty, i.unit].filter(Boolean).join(" ");
+      return `<li class="${i.status}"><span class="st">${icon}</span><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="q">${esc(q)}</span></li>`;
+    };
+    const url = safeUrl(r.link);
+    $("sheetBody").innerHTML = `
+      <div>
+        <h2 id="sheetTitle">${esc(r.name)}</h2>
+        <span class="status ${x.level}">${x.level === "ready" ? "ของครบ ทำได้เลย" : `ขาดอีก ${x.missing.length} อย่าง`}</span>
+      </div>
+      <div class="facts">
+        <div class="fact"><small>หมวด</small><b>${esc(r.cat)}</b></div>
+        ${r.time != null ? `<div class="fact"><small>เวลา</small><b><span class="num">${r.time}</span> นาที</b></div>` : ""}
+        ${r.serves != null ? `<div class="fact"><small>จำนวน</small><b><span class="num">${r.serves}</span> ที่</b></div>` : ""}
+      </div>
+      ${x.items.length ? `<section><h3>วัตถุดิบ</h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
+      ${r.steps ? `<section><h3>ขั้นตอน</h3><p class="steps">${esc(r.steps)}</p></section>` : ""}
+      ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
+      ${url ? `<section><h3>สูตรต้นทาง</h3><a class="src" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ICON.link}${esc(url)}</a></section>` : ""}
+      ${r.note ? `<section><h3>หมายเหตุ</h3><p class="note">${esc(r.note)}</p></section>` : ""}`;
+  }
+
+  function openSheet(name) {
+    const m = model(); if (!m) return;
+    const r = m.recipes.find((x) => x.name === name); if (!r) return;
+    state.openRecipe = name;
+    lastFocus = document.activeElement;
+    fillSheet(evaluate(r, m.byRecipe));
+    const sheet = $("sheet"), scrim = $("scrim");
+    sheet.hidden = false; scrim.hidden = false;
+    sheet.querySelector(".scroll").scrollTop = 0;
+    requestAnimationFrame(() => { sheet.classList.add("open"); scrim.classList.add("open"); });
+    sheet.setAttribute("tabindex", "-1");
+    sheet.focus({ preventScroll: true });
+  }
+
+  function closeSheet() {
+    if (!state.openRecipe) return;
+    state.openRecipe = null;
+    const sheet = $("sheet"), scrim = $("scrim");
+    sheet.classList.remove("open"); scrim.classList.remove("open");
+    setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; scrim.hidden = true; } }, 300);
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("button, .scrim");
+    if (!t) return;
+    if (t.id === "scrim") return closeSheet();
+    if (t.dataset.ing) {
+      const n = t.dataset.ing;
+      state.selected.has(n) ? state.selected.delete(n) : state.selected.add(n);
+      saveSelected();
+      return render();
+    }
+    if (t.dataset.view || t.dataset.goto) {
+      state.view = t.dataset.view || t.dataset.goto;
+      window.scrollTo({ top: 0 });
+      return render();
+    }
+    if (t.dataset.cat) { state.cat = t.dataset.cat; return render(); }
+    if (t.dataset.recipe) return openSheet(t.dataset.recipe);
+    if (t.id === "clear") { state.selected.clear(); saveSelected(); return render(); }
+    if (t.id === "sync") return refresh();
+    if (t.id === "noticeAction" && state.notice && state.notice.onAction) return state.notice.onAction();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+
+  // ---------- Google sign-in ----------
+  // ID token lives ~1 h; kept in localStorage so reopening the app within the hour skips the login screen.
+  let waiting = null; // { promise, resolve } while the login screen is up
+  function storedToken() {
+    try {
+      const t = JSON.parse(localStorage.getItem(TOKEN_KEY) || "null");
+      return t && t.exp - 60 > Date.now() / 1000 ? t.token : null;
+    } catch { return null; }
+  }
+  function tokenExp(tok) {
+    try { return JSON.parse(atob(tok.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp || 0; } catch { return 0; }
+  }
+  function forgetToken() { try { localStorage.removeItem(TOKEN_KEY); } catch {} }
+  function onCredential(res) {
+    const tok = res && res.credential;
+    if (!tok) return;
+    try { localStorage.setItem(TOKEN_KEY, JSON.stringify({ token: tok, exp: tokenExp(tok) })); } catch {}
+    $("login").hidden = true;
+    if (waiting) { const w = waiting; waiting = null; w.resolve(tok); }
+  }
+  let gsiReady = false;
+  function startGsi() {
+    if (!(window.google && google.accounts && google.accounts.id)) { setTimeout(startGsi, 200); return; }
+    if (!gsiReady) {
+      google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential, auto_select: true, login_hint: OWNER_EMAIL });
+      gsiReady = true;
+    }
+    google.accounts.id.renderButton($("gbtn"), { theme: "outline", size: "large", shape: "pill", text: "signin_with" });
+    google.accounts.id.prompt();
+  }
+  function getToken() {
+    const tok = storedToken();
+    if (tok) return Promise.resolve(tok);
+    if (!waiting) {
+      const w = {}; w.promise = new Promise((r) => { w.resolve = r; }); waiting = w;
+      $("login").hidden = false; startGsi();
+    }
+    return waiting.promise;
+  }
+
+  // Calls a server function (Code.js doPost). Rejects with an Error whose message is shown in the banner.
+  async function api(fn, arg, retried) {
+    if (!API_URL) throw new Error("ยังไม่ได้ตั้ง API_URL ใน Index.html");
+    const tok = await getToken();
+    let res;
+    try {
+      // text/plain body = "simple" request, so the browser sends no CORS preflight (Apps Script can't answer one)
+      const r = await fetch(API_URL, { method: "POST", body: JSON.stringify({ fn, arg, token: tok }) });
+      res = await r.json().catch(() => { throw new Error("API ตอบกลับผิดรูปแบบ (เช็ค URL และสิทธิ์ Anyone ของ deployment)"); });
+    } catch (e) {
+      throw e instanceof Error && e.message.startsWith("API") ? e : new Error(`ต่อเน็ตไม่ได้ (${(e && e.message) || e})`);
+    }
+    if (res.ok) return res.result;
+    const msg = String(res.error || "").replace(/^Error:\s*/, "");
+    if (msg.startsWith("AUTH") && !retried) { forgetToken(); return api(fn, arg, true); }
+    throw new Error(msg.startsWith("AUTH") ? "บัญชีนี้ไม่มีสิทธิ์ดูข้อมูล" : msg);
+  }
+
+  // ---------- data (Code.js getData_) ----------
+  async function load() {
+    state.loading = true; render();
+    try {
+      const d = await api("getData");
+      state.raw = { recipes: d.recipes, rows: d.rows, ingredients: d.ingredients };
+      state.updatedAt = d.updatedAt;
+      state.loading = false; state.notice = null;
+    } catch (err) {
+      // keep whatever was loaded before; only the banner changes
+      state.loading = false;
+      state.notice = { text: `โหลดข้อมูลจากชีตไม่สำเร็จ: ${(err && err.message) || err}`, action: "ลองอีกครั้ง", onAction: load };
+    }
+    render();
+  }
+  const refresh = load;
+
+  // coming back to the tab after editing the sheet should show the new rows
+  let hiddenAt = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (hiddenAt && Date.now() - hiddenAt > 60000 && !state.loading) load();
+  });
+
+  render();
+  load();
+})();
+</script>
+</body>
+</html>
