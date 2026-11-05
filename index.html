@@ -300,6 +300,32 @@ button { font: inherit; color: inherit; }
   margin-top: 6px; padding: 10px 20px; border: 0; border-radius: 999px;
   background: var(--ink); color: var(--bg); font-weight: 600; cursor: pointer;
 }
+/* Far-away menus (search only), shopping list, "buy to unlock" */
+.menu-card.far .badge { background: var(--line-soft); color: var(--ink-muted); }
+.section-head.far .count { background: var(--line-soft); color: var(--ink-muted); }
+.tool { padding: 14px 16px 6px; display: flex; flex-direction: column; }
+.tool-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tool-head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.tool-sub { margin: 2px 0 6px; font-size: 12.5px; color: var(--ink-muted); }
+.tool-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0;
+  border: 0; border-top: 1px solid var(--line-soft); background: transparent;
+  font: inherit; color: inherit; text-align: left;
+}
+.tool-row .t { flex: 1; min-width: 0; }
+.tool-row .t b { display: block; font-size: 14.5px; font-weight: 600; }
+.tool-row .t small { display: block; margin-top: 1px; font-size: 12px; line-height: 1.5; color: var(--ink-muted); }
+.tool-row.shop { cursor: pointer; }
+.tool-row.shop .box { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-faint); flex-shrink: 0; }
+.tool-row.shop:active .box { background: var(--primary-light); border-color: var(--primary-dark); }
+.pill-btn {
+  flex-shrink: 0; padding: 7px 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); font: inherit; font-size: 13px; font-weight: 600;
+}
+.pill-btn.ghost { background: var(--line-soft); color: var(--ink); }
+.pill-btn:disabled { background: var(--line-soft); color: var(--ink-faint); cursor: default; }
+.pill-btn.wide { width: 100%; padding: 12px; font-size: 15px; }
+.pill-btn:focus-visible, .tool-row.shop:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .skeleton { height: 64px; border-radius: var(--radius-card); background: var(--line-soft); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
 
@@ -461,6 +487,7 @@ button { font: inherit; color: inherit; }
   // how many missing must-have ingredients still counts as "ขาดอีกนิด"
   const ALMOST_MAX = 2;
   const STORE_KEY = "recipe-finder:selected";
+  const PLAN_KEY = "recipe-finder:plan"; // menus added to the shopping list
 
   // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
   const API_URL = "https://script.google.com/macros/s/AKfycbxLo1n0SuPjIpr0CTiRSFnpjIHZYSZEq6bkb555f3ye1eBsCs-UsAEzTKega9Fz3ynE3Q/exec";
@@ -502,8 +529,10 @@ button { font: inherit; color: inherit; }
     notice: null, // {code, text, action?}
     view: "pantry",
     search: "",
+    menuSearch: "",
     cat: "ทั้งหมด",
     selected: new Set(loadSelected()),
+    plan: new Set(loadPlan()),
     openRecipe: null,
   };
 
@@ -513,6 +542,12 @@ button { font: inherit; color: inherit; }
   }
   function saveSelected() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify([...state.selected])); } catch {}
+  }
+  function loadPlan() {
+    try { return JSON.parse(localStorage.getItem(PLAN_KEY) || "[]"); } catch { return []; }
+  }
+  function savePlan() {
+    try { localStorage.setItem(PLAN_KEY, JSON.stringify([...state.plan])); } catch {}
   }
 
   // ---------- parsing ----------
@@ -577,6 +612,31 @@ button { font: inherit; color: inherit; }
     return { recipe, items, missing, swaps, level };
   }
 
+  // ingredient → menus that become "ทำได้เลย" if only that one ingredient is bought
+  function unlockMap(results) {
+    const map = new Map();
+    for (const x of results) {
+      if (x.missing.length !== 1) continue;
+      const n = x.missing[0].name;
+      if (!map.has(n)) map.set(n, []);
+      map.get(n).push(x.recipe.name);
+    }
+    return map;
+  }
+
+  // ingredient → [{menu, qty}] still missing for the menus on the shopping list
+  function shoppingList(results) {
+    const list = new Map();
+    for (const x of results) {
+      if (!state.plan.has(x.recipe.name)) continue;
+      for (const it of x.missing) {
+        if (!list.has(it.name)) list.set(it.name, []);
+        list.get(it.name).push({ menu: x.recipe.name, qty: [it.qty, it.unit].filter(Boolean).join(" ") });
+      }
+    }
+    return list;
+  }
+
   // ---------- helpers ----------
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const $ = (id) => document.getElementById(id);
@@ -620,7 +680,16 @@ button { font: inherit; color: inherit; }
     }
 
     if (!m) { view.innerHTML = loadingHtml(); return; }
-    view.innerHTML = state.view === "pantry" ? pantryHtml(m) : menusHtml(m, ready, almost);
+    view.innerHTML = state.view === "pantry" ? pantryHtml(m) : menusHtml(m, ready, almost, results);
+    if (state.view === "menus") {
+      const mq = $("mq");
+      if (mq) mq.addEventListener("input", (e) => {
+        state.menuSearch = e.target.value;
+        const pos = e.target.selectionStart;
+        render();
+        const again = $("mq"); again.focus(); again.setSelectionRange(pos, pos);
+      });
+    }
     if (state.view === "pantry") {
       const input = $("q");
       input.addEventListener("input", (e) => {
@@ -675,50 +744,103 @@ button { font: inherit; color: inherit; }
       ${order.length ? groupHtml : none}`;
   }
 
-  function menusHtml(m, ready, almost) {
+  function menusHtml(m, ready, almost, results) {
     if (!m.recipes.length) {
       return `<div class="card empty"><h3>ยังไม่มีสูตรในชีต</h3><p>เพิ่มเมนูในแท็บ "สูตร" และวัตถุดิบของเมนูในแท็บ "วัตถุดิบในสูตร" แล้วกดโหลดใหม่</p></div>`;
     }
-    if (!state.selected.size) {
-      return `<div class="card empty"><h3>ยังไม่ได้บอกว่ามีอะไรบ้าง</h3><p>ติ๊กของที่มีในครัวก่อน แล้วหน้านี้จะบอกว่าทำเมนูไหนได้</p><button type="button" data-goto="pantry">ไปติ๊กของที่มี</button></div>`;
-    }
-    const cats = ["ทั้งหมด", ...new Set([...ready, ...almost].map((x) => x.recipe.cat))];
-    if (!cats.includes(state.cat)) state.cat = "ทั้งหมด";
-    const inCat = (x) => state.cat === "ทั้งหมด" || x.recipe.cat === state.cat;
+    const searchBox = `<label class="search" for="mq">${ICON.search}<input id="mq" type="search" placeholder="ค้นหาเมนู" value="${esc(state.menuSearch)}" autocomplete="off"></label>`;
     const byTime = (a, b) => (a.recipe.time ?? 999) - (b.recipe.time ?? 999);
-    const r = ready.filter(inCat).sort(byTime);
-    const a = almost.filter(inCat).sort((x, y) => x.missing.length - y.missing.length || byTime(x, y));
-
-    const filters = cats.length > 2
-      ? `<div class="filters" role="group" aria-label="กรองตามหมวด">${cats.map((c) => `<button type="button" class="filter" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join("")}</div>`
-      : "";
+    const byMissing = (x, y) => x.missing.length - y.missing.length || byTime(x, y);
 
     const card = (x) => {
-      const extra = x.level === "almost"
-        ? `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`
-        : x.swaps.length
-          ? `<span class="swap">ใช้${x.swaps.map((i) => `${esc(i.usedSub)}แทน${esc(i.name)}`).join(", ")}</span>`
-          : "";
-      const badge = x.level === "ready" ? ICON.check : `−${x.missing.length}`;
+      let extra = "";
+      if (x.level === "almost") {
+        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`;
+      } else if (x.level === "far") {
+        extra = `<span class="need">${x.items.length ? `ขาด ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>`;
+      } else if (x.swaps.length) {
+        extra = `<span class="swap">ใช้${x.swaps.map((i) => `${esc(i.usedSub)}แทน${esc(i.name)}`).join(", ")}</span>`;
+      }
+      const badge = x.level === "ready" ? ICON.check : x.items.length ? `−${x.missing.length}` : "–";
       return `<button type="button" class="menu-card ${x.level}" data-recipe="${esc(x.recipe.name)}">
         <span class="badge" aria-hidden="true">${badge}</span>
         <span class="body"><span class="name">${esc(x.recipe.name)}</span><span class="meta">${metaHtml(x.recipe)}</span>${extra}</span>
         <span class="chev">${ICON.chev}</span>
       </button>`;
     };
-
-    const readyBlock = r.length
-      ? `<div class="card list">${r.map(card).join("")}</div>`
-      : `<div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูเมนูที่ขาดอีกนิดด้านล่าง" : ""}</p></div>`;
-    const almostBlock = a.length
-      ? `<div class="section-head almost"><h2>ขาดอีกนิด</h2><span class="count num">${a.length}</span></div>
-         <div class="card list">${a.map(card).join("")}</div>`
+    const section = (cls, title, list) => list.length
+      ? `<div class="section-head ${cls}"><h2>${title}</h2><span class="count num">${list.length}</span></div><div class="card list">${list.map(card).join("")}</div>`
       : "";
 
-    return `${filters}
-      <div class="section-head ready"><h2>ทำได้เลย</h2><span class="count num">${r.length}</span></div>
+    // searching: every menu by name or tag, including the ones that are still far from ready
+    const q = state.menuSearch.trim().toLowerCase();
+    if (q) {
+      const hit = results.filter((x) => x.recipe.name.toLowerCase().includes(q) || x.recipe.tags.some((t) => t.toLowerCase().includes(q)));
+      const body = hit.length
+        ? section("ready", "ทำได้เลย", hit.filter((x) => x.level === "ready").sort(byTime)) +
+          section("almost", "ขาดอีกนิด", hit.filter((x) => x.level === "almost").sort(byMissing)) +
+          section("far", "ยังไม่พร้อมทำ",hit.filter((x) => x.level === "far").sort(byMissing))
+        : `<div class="card empty"><h3>ไม่เจอ "${esc(state.menuSearch)}"</h3><p>ลองค้นด้วยชื่อเมนูหรือแท็กอื่น</p></div>`;
+      return `${searchBox}${body}`;
+    }
+
+    if (!state.selected.size && !state.plan.size) {
+      return `${searchBox}<div class="card empty"><h3>ยังไม่ได้บอกว่ามีอะไรบ้าง</h3><p>ติ๊กของที่มีในครัวก่อน แล้วหน้านี้จะบอกว่าทำเมนูไหนได้</p><button type="button" data-goto="pantry">ไปติ๊กของที่มี</button></div>`;
+    }
+    const cats = ["ทั้งหมด", ...new Set([...ready, ...almost].map((x) => x.recipe.cat))];
+    if (!cats.includes(state.cat)) state.cat = "ทั้งหมด";
+    const inCat = (x) => state.cat === "ทั้งหมด" || x.recipe.cat === state.cat;
+    const r = ready.filter(inCat).sort(byTime);
+    const a = almost.filter(inCat).sort(byMissing);
+
+    const filters = cats.length > 2
+      ? `<div class="filters" role="group" aria-label="กรองตามหมวด">${cats.map((c) => `<button type="button" class="filter" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join("")}</div>`
+      : "";
+
+    const readyBlock = r.length
+      ? section("ready", "ทำได้เลย", r)
+      : `<div class="section-head ready"><h2>ทำได้เลย</h2><span class="count num">0</span></div>
+         <div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูเมนูที่ขาดอีกนิดด้านล่าง" : ""}</p></div>`;
+
+    return `${searchBox}
+      ${shopHtml(results)}
+      ${filters}
       ${readyBlock}
-      ${almostBlock}`;
+      ${unlockHtml(results)}
+      ${section("almost", "ขาดอีกนิด", a)}`;
+  }
+
+  // menus the user put on the shopping list → what is still missing, tap an item once it is bought
+  function shopHtml(results) {
+    if (!state.plan.size) return "";
+    const list = shoppingList(results);
+    const rows = [...list].map(([name, uses]) => `<button type="button" class="tool-row shop" data-bought="${esc(name)}">
+        <span class="box" aria-hidden="true"></span>
+        <span class="t"><b>${esc(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
+      </button>`).join("");
+    return `<section class="card tool">
+      <div class="tool-head"><h2>รายการซื้อของ</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
+      <p class="tool-sub">${rows ? "ซื้อแล้วแตะที่ชื่อ ของจะถูกนับว่ามีในครัว" : "ของครบทุกเมนูในรายการแล้ว"}</p>
+      ${rows}
+    </section>`;
+  }
+
+  // one ingredient that unlocks several menus at once (only worth showing for 2+ menus)
+  function unlockHtml(results) {
+    const rows = [...unlockMap(results)]
+      .filter(([, ms]) => ms.length >= 2)
+      .sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], "th"))
+      .slice(0, 5);
+    if (!rows.length) return "";
+    return `<section class="card tool">
+      <div class="tool-head"><h2>ซื้อเพิ่มอะไรดี</h2></div>
+      <p class="tool-sub">ซื้ออย่างเดียว ทำได้เพิ่มหลายเมนู</p>
+      ${rows.map(([name, ms]) => {
+        const added = ms.every((n) => state.plan.has(n));
+        return `<div class="tool-row"><div class="t"><b>${esc(name)} <span class="num">+${ms.length}</span> เมนู</b><small>${ms.map(esc).join(" · ")}</small></div>
+          <button type="button" class="pill-btn" data-unlock="${esc(name)}" ${added ? "disabled" : ""}>${added ? "อยู่ในรายการ" : "ใส่รายการซื้อ"}</button></div>`;
+      }).join("")}
+    </section>`;
   }
 
   function renderNotice() {
@@ -760,7 +882,7 @@ button { font: inherit; color: inherit; }
     $("sheetBody").innerHTML = `
       <div>
         <h2 id="sheetTitle">${esc(r.name)}</h2>
-        <span class="status ${x.level}">${x.level === "ready" ? "ของครบ ทำได้เลย" : `ขาดอีก ${x.missing.length} อย่าง`}</span>
+        <span class="status ${x.level}">${x.level === "ready" ? "ของครบ ทำได้เลย" : x.items.length ? `ขาดอีก ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>
       </div>
       <div class="facts">
         <div class="fact"><small>หมวด</small><b>${esc(r.cat)}</b></div>
@@ -768,6 +890,7 @@ button { font: inherit; color: inherit; }
         ${r.serves != null ? `<div class="fact"><small>จำนวน</small><b><span class="num">${r.serves}</span> ที่</b></div>` : ""}
       </div>
       ${x.items.length ? `<section><h3>วัตถุดิบ</h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
+      ${x.level !== "ready" && x.missing.length ? `<button type="button" class="pill-btn wide ${state.plan.has(r.name) ? "ghost" : ""}" data-plan="${esc(r.name)}">${state.plan.has(r.name) ? "เอาออกจากรายการซื้อของ" : "ใส่รายการซื้อของ"}</button>` : ""}
       ${r.steps ? `<section><h3>ขั้นตอน</h3><p class="steps">${esc(r.steps)}</p></section>` : ""}
       ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
       ${url ? `<section><h3>สูตรต้นทาง</h3><a class="src" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ICON.link}${esc(url)}</a></section>` : ""}
@@ -814,6 +937,21 @@ button { font: inherit; color: inherit; }
       return render();
     }
     if (t.dataset.cat) { state.cat = t.dataset.cat; return render(); }
+    if (t.dataset.plan) {
+      const n = t.dataset.plan;
+      state.plan.has(n) ? state.plan.delete(n) : state.plan.add(n);
+      savePlan();
+      return render();
+    }
+    if (t.dataset.unlock) {
+      const m = model(); if (!m) return;
+      const names = unlockMap(m.recipes.map((r) => evaluate(r, m.byRecipe))).get(t.dataset.unlock) || [];
+      names.forEach((n) => state.plan.add(n));
+      savePlan();
+      return render();
+    }
+    if (t.dataset.bought) { state.selected.add(t.dataset.bought); saveSelected(); return render(); }
+    if (t.dataset.planclear) { state.plan.clear(); savePlan(); return render(); }
     if (t.dataset.recipe) return openSheet(t.dataset.recipe);
     if (t.id === "clear") { state.selected.clear(); saveSelected(); return render(); }
     if (t.id === "sync") return refresh();
