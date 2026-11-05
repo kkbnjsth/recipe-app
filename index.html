@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>วันนี้ทำอะไรกิน</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#f5fafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#f2f8f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c1919" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -24,23 +24,28 @@
    Colours: the app's own teal palette. Components: ChaiJaai-style — borderless white cards with a soft shadow,
    inverted (ink) selected states, one gradient hero card, grouped lists; teal = ทำได้เลย, orange = ขาดอีกนิด */
 :root {
-  --bg: #f5fafa;
+  --bg: #f2f8f6;
   --surface: #ffffff;
-  --ink: #10666d;
-  --ink-muted: #5b9ca2;
-  --ink-faint: #9dc6c9;
+  --ink: #0b3d42;
+  --ink-muted: #3f7378;
+  --ink-faint: #6c9498;
+  --brand: #10666d;
+  --on-brand: #ffffff;
   --primary: #59c9c9;
-  --primary-dark: #35838a;
-  --primary-light: #b0ebe1;
+  --primary-dark: #0b4f55;
+  --primary-light: #d5f2ec;
   --accent: #c96a22;
+  --accent-ink: #8f4410;
   --accent-light: #fce9d6;
   --danger: #d64545;
   --line: #c8e6e8;
-  --line-soft: #eaf4f5;
+  --line-soft: #e6f0ef;
+  --chip: #eef5f4;
+  --track: #e1eeec;
   --glass: rgba(255, 255, 255, 0.72);
   --glass-edge: rgba(255, 255, 255, 0.85);
   --scrim: rgba(16, 60, 64, 0.32);
-  --shadow-card: 0 1px 2px rgba(16, 102, 109, 0.05), 0 4px 16px rgba(16, 102, 109, 0.07);
+  --shadow-card: 0 1px 2px rgba(16, 102, 109, 0.06), 0 6px 20px rgba(16, 102, 109, 0.08);
   --shadow-nav: 0 10px 28px -8px rgba(31, 42, 36, 0.22), 0 2px 6px rgba(31, 42, 36, 0.06);
 
   --c-meat: #c1544a;
@@ -56,7 +61,7 @@
 
   --font-body: "Poppins", "IBM Plex Sans Thai", "Thonburi", "Leelawadee UI", sans-serif;
   --font-num: "Poppins", "IBM Plex Sans Thai", sans-serif;
-  --radius-card: 20px;
+  --radius-card: 24px;
   --radius-tag: 10px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -65,7 +70,8 @@
     --bg: #0c1919; --surface: #132526;
     --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
     --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
-    --accent: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+    --accent: #f0a062; --accent-ink: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+    --brand: #59c9c9; --on-brand: #062628; --chip: #1a3132; --track: #132526;
     --line: #24403f; --line-soft: #1a3132;
     --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
     --scrim: rgba(0, 0, 0, 0.5);
@@ -80,7 +86,8 @@
   --bg: #0c1919; --surface: #132526;
   --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
   --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
-  --accent: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+  --accent: #f0a062; --accent-ink: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
+    --brand: #59c9c9; --on-brand: #062628; --chip: #1a3132; --track: #132526;
   --line: #24403f; --line-soft: #1a3132;
   --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
   --scrim: rgba(0, 0, 0, 0.5);
@@ -119,9 +126,10 @@ button { font: inherit; color: inherit; }
 /* Header */
 .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; text-wrap: balance; }
-.head .sub { margin: 1px 0 0; font-size: 12px; color: var(--ink-muted); }
+.head h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.head .sub { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--ink-muted); }
 .sync {
-  width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+  width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
   border: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-card);
   color: var(--ink); cursor: pointer;
   transition: transform 140ms var(--ease-out);
@@ -140,8 +148,8 @@ button { font: inherit; color: inherit; }
 .notice .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
 .notice p { margin: 0; }
 .notice button {
-  margin-top: 8px; padding: 6px 12px; border-radius: var(--radius-tag);
-  border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+  margin-top: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 0; background: var(--accent-ink); color: var(--surface); font-size: 13px; font-weight: 600; cursor: pointer;
 }
 
 /* Card surface: borderless white, soft shadow */
@@ -152,33 +160,61 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--shadow-card);
 }
 
-/* Hero: the one colourful card — deep teal into the light brand teal, white text on the dark side */
+/* Hero: the one colourful card — the quickest menu that is ready now, with a ring of ready / all menus.
+   The gradient stops at #1b8088 (not #59c9c9) so white text passes contrast across the whole card. */
 .hero {
-  position: relative; overflow: hidden;
-  padding: 18px 18px 16px; border-radius: 24px; color: #fff;
-  background:
-    linear-gradient(90deg, rgba(6, 48, 52, 0.34) 0%, rgba(6, 48, 52, 0.26) 45%, rgba(6, 48, 52, 0) 82%),
-    linear-gradient(118deg, #0b4f55 0%, #10666d 40%, #59c9c9 100%);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  position: relative; overflow: hidden; display: block; width: 100%;
+  padding: 20px; border: 0; border-radius: 28px; color: #fff; text-align: left; cursor: pointer;
+  background: linear-gradient(125deg, #0b4f55 0%, #10666d 55%, #1b8088 100%);
+  transition: transform 140ms var(--ease-out);
 }
-.hero .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.hero .lbl { font-size: 13px; font-weight: 500; opacity: 0.95; }
-.hero .of { font-size: 12px; opacity: 0.85; }
-.hero .amt { margin: 2px 0 14px; font-family: var(--font-num); font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
-.hero .amt small { font-family: var(--font-body); font-size: 15px; font-weight: 500; letter-spacing: 0; margin-left: 4px; }
-.hero .split { display: flex; gap: 10px; }
-.hero .split button {
-  flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 0;
-  padding: 10px 13px; border: 0; border-radius: 16px; cursor: pointer; text-align: left;
-  background: rgba(255, 255, 255, 0.92); color: #14171a; text-shadow: none;
-  transition: transform 140ms var(--ease-out), background-color 160ms var(--ease-out);
+.hero:active { transform: scale(0.985); }
+.hero.static { cursor: default; }
+.hero.static:active { transform: none; }
+.hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+.hero::before { right: -50px; bottom: -70px; width: 190px; height: 190px; background: rgba(255, 255, 255, 0.07); }
+.hero::after { right: 40px; bottom: -90px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.05); }
+.hero > * { position: relative; }
+.hero .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hero .txt { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.hero .kicker {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 10px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-size: 12px; font-weight: 600;
 }
-.hero .split button:active { transform: scale(0.97); }
-.hero .split button[aria-current="page"] { background: #fff; box-shadow: inset 0 0 0 2px #10666d; }
-.hero .split small { font-size: 12px; color: #5b9ca2; }
-.hero .split b { color: #10666d; }
-.hero .split b { font-family: var(--font-num); font-size: 18px; font-weight: 600; line-height: 1.3; font-variant-numeric: tabular-nums; }
-.hero .split .almost b { color: #c96a22; }
+.hero .kicker svg { width: 14px; height: 14px; }
+.hero .title { margin-top: 14px; font-size: 24px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.hero .meta { margin-top: 4px; font-size: 13px; }
+.hero .ring { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; white-space: nowrap; }
+.hero .ring .rw { position: relative; width: 64px; height: 64px; }
+.hero .ring svg { display: block; width: 64px; height: 64px; transform: rotate(-90deg); }
+.hero .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.hero .cta {
+  margin-top: 18px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px 0 20px;
+  border-radius: 999px; background: #fff; color: #0b3d42; font-size: 15px; font-weight: 600;
+}
+.hero .cta svg { width: 16px; height: 16px; }
+/* Pantry version: one row — how many picked, and a button over to the menus */
+.hero.summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 16px 20px; border-radius: var(--radius-card); }
+.hero.summary::before { top: -60px; bottom: auto; right: -40px; width: 150px; height: 150px; }
+.hero.summary::after { display: none; }
+.hero.summary .title, .hero.summary .meta { margin-top: 0; }
+.hero.summary .cta { margin-top: 0; flex-shrink: 0; }
+
+/* Segmented switch: ทำได้เลย / ขาดอีกนิด */
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--track); }
+.seg button {
+  flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 0; border-radius: 999px; background: transparent; color: var(--ink); font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+}
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--on-brand); }
+.cnt {
+  min-width: 24px; height: 22px; padding: 0 7px; box-sizing: border-box; display: inline-grid; place-items: center;
+  border-radius: 999px; font-family: var(--font-num); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cnt.ready { background: var(--primary-light); color: var(--primary-dark); }
+.cnt.almost { background: var(--accent-light); color: var(--accent-ink); }
+.seg button[aria-pressed="true"] .cnt.ready { background: color-mix(in srgb, var(--on-brand) 20%, transparent); color: inherit; }
 
 /* View container */
 .view { display: flex; flex-direction: column; gap: 16px; }
@@ -217,9 +253,9 @@ button { font: inherit; color: inherit; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
-  min-height: 38px; padding: 7px 14px; border-radius: 999px;
-  border: 0; background: var(--line-soft);
-  font-size: 14px; cursor: pointer;
+  min-height: 44px; padding: 8px 16px; border-radius: 999px;
+  border: 0; background: var(--chip);
+  font-size: 15px; cursor: pointer;
   transition: transform 140ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
 }
 .chip:active { transform: scale(0.95); }
@@ -232,7 +268,7 @@ button { font: inherit; color: inherit; }
   font-weight: 600;
 }
 .chip[aria-pressed="true"] .tick { display: block; color: var(--c); }
-.chip:focus-visible, .menu-card:focus-visible, .nav button:focus-visible, .filter:focus-visible, .sync:focus-visible, .hero .split button:focus-visible {
+.chip:focus-visible, .menu-card:focus-visible, .nav button:focus-visible, .filter:focus-visible, .sync:focus-visible, .hero:focus-visible, .seg button:focus-visible {
   outline: 2px solid var(--primary); outline-offset: 2px;
 }
 
@@ -240,10 +276,12 @@ button { font: inherit; color: inherit; }
 .filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin: -2px -2px -6px; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
 .filter {
-  flex-shrink: 0; padding: 9px 16px; border-radius: 999px; border: 0;
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0;
   background: var(--surface); box-shadow: var(--shadow-card);
-  font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap;
+  font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap;
 }
+.filter .cdot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 .filter[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
 
 /* Menu sections */
@@ -254,39 +292,39 @@ button { font: inherit; color: inherit; }
   font-family: var(--font-num); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 .section-head.ready .count { background: var(--primary-light); color: var(--primary-dark); }
-.section-head.almost .count { background: var(--accent-light); color: var(--accent); }
+.section-head.almost .count { background: var(--accent-light); color: var(--accent-ink); }
 
 /* Menu rows: one grouped card per section, hairline dividers inset past the badge */
 .list { overflow: hidden; }
 .menu-card {
   position: relative;
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  min-height: 68px; padding: 12px 14px; border: 0; background: transparent;
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  min-height: 76px; padding: 14px 16px; border: 0; background: transparent;
   text-align: left; cursor: pointer;
   transition: background-color 140ms var(--ease-out);
 }
 .menu-card + .menu-card::before {
-  content: ""; position: absolute; top: 0; left: 66px; right: 0; height: 1px; background: var(--line-soft);
+  content: ""; position: absolute; top: 0; left: 74px; right: 0; height: 1px; background: var(--line-soft);
 }
 .menu-card:active { background: var(--line-soft); }
 .menu-card .badge {
-  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
   display: grid; place-items: center;
-  font-family: var(--font-num); font-weight: 600; font-size: 15px;
+  font-family: var(--font-num); font-weight: 600; font-size: 16px;
 }
 .menu-card.ready .badge { background: var(--primary-light); color: var(--primary-dark); }
-.menu-card.almost .badge { background: var(--accent-light); color: var(--accent); }
+.menu-card.almost .badge { background: var(--accent-light); color: var(--accent-ink); }
 .menu-card.ready .badge svg { width: 20px; height: 20px; }
 .menu-card .body { flex: 1; min-width: 0; }
 .menu-card .body { display: flex; flex-direction: column; }
-.menu-card .name { font-weight: 600; font-size: 15px; line-height: 1.35; }
-.menu-card .meta { font-size: 12px; color: var(--ink-muted); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
+.menu-card .name { font-weight: 600; font-size: 16px; line-height: 1.35; }
+.menu-card .meta { font-size: 13px; color: var(--ink-muted); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
 .menu-card .meta span { display: inline-flex; align-items: center; gap: 4px; }
 .menu-card .meta svg { width: 12px; height: 12px; }
-.menu-card .need { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-muted); }
+.menu-card .need { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-muted); }
 .menu-card .need .miss {
-  padding: 1px 9px; border-radius: 999px; font-weight: 500;
-  background: var(--accent-light); color: var(--accent);
+  padding: 1px 10px; border-radius: 999px; font-weight: 500;
+  background: var(--accent-light); color: var(--accent-ink);
 }
 .menu-card .swap { margin-top: 6px; font-size: 12.5px; color: var(--ink-muted); }
 .menu-card .chev { width: 16px; height: 16px; color: var(--ink-faint); flex-shrink: 0; }
@@ -294,35 +332,47 @@ button { font: inherit; color: inherit; }
 .empty {
   padding: 28px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
+.empty.big { padding: 40px 24px 32px; border-radius: 28px; gap: 10px; }
+.empty .art {
+  width: 120px; height: 120px; margin-bottom: 10px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--track); color: var(--brand);
+}
+.empty .art svg { width: 64px; height: 64px; }
 .empty h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.empty.big h3 { font-size: 20px; font-weight: 700; }
 .empty p { margin: 0; font-size: 14px; color: var(--ink-muted); max-width: 32ch; }
 .empty button {
-  margin-top: 6px; padding: 10px 20px; border: 0; border-radius: 999px;
-  background: var(--ink); color: var(--bg); font-weight: 600; cursor: pointer;
+  margin-top: 6px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px;
+  background: var(--brand); color: var(--on-brand); font-size: 15px; font-weight: 600; cursor: pointer;
 }
+.foot { margin: 0 8px; text-align: center; font-size: 13px; color: var(--ink-muted); }
 /* Far-away menus (search only), shopping list, "buy to unlock" */
 .menu-card.far .badge { background: var(--line-soft); color: var(--ink-muted); }
 .section-head.far .count { background: var(--line-soft); color: var(--ink-muted); }
 .tool { padding: 14px 16px 6px; display: flex; flex-direction: column; }
 .tool-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.tool-head h2 { margin: 0; font-size: 15px; font-weight: 600; }
-.tool-sub { margin: 2px 0 6px; font-size: 12.5px; color: var(--ink-muted); }
+.tool-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+.tool-sub { margin: 2px 0 8px; font-size: 13px; color: var(--ink-muted); }
 .tool-row {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0;
   border: 0; border-top: 1px solid var(--line-soft); background: transparent;
   font: inherit; color: inherit; text-align: left;
 }
 .tool-row .t { flex: 1; min-width: 0; }
-.tool-row .t b { display: block; font-size: 14.5px; font-weight: 600; }
-.tool-row .t small { display: block; margin-top: 1px; font-size: 12px; line-height: 1.5; color: var(--ink-muted); }
+.tool-row .t b { display: block; font-size: 15px; font-weight: 600; }
+.tool-row .t b .q { font-weight: 400; color: var(--ink-muted); }
+.tool-row .t small { display: block; margin-top: 1px; font-size: 13px; line-height: 1.5; color: var(--ink-muted); }
+.tool-row { min-height: 56px; }
 .tool-row.shop { cursor: pointer; }
 .tool-row.shop .box { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-faint); flex-shrink: 0; }
 .tool-row.shop:active .box { background: var(--primary-light); border-color: var(--primary-dark); }
 .pill-btn {
-  flex-shrink: 0; padding: 7px 14px; border: 0; border-radius: 999px; cursor: pointer;
-  background: var(--ink); color: var(--bg); font: inherit; font-size: 13px; font-weight: 600;
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); font: inherit; font-size: 14px; font-weight: 600;
 }
-.pill-btn.ghost { background: var(--line-soft); color: var(--ink); }
+.pill-btn svg { width: 14px; height: 14px; }
+.pill-btn.ghost { background: var(--track); color: var(--ink); }
 .pill-btn:disabled { background: var(--line-soft); color: var(--ink-faint); cursor: default; }
 .pill-btn.wide { width: 100%; padding: 12px; font-size: 15px; }
 .pill-btn:focus-visible, .tool-row.shop:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -346,17 +396,18 @@ button { font: inherit; color: inherit; }
 }
 .nav button {
   display: flex; align-items: center; gap: 6px;
-  padding: 10px 18px; border: 0; border-radius: 999px; background: transparent;
-  font-size: 14px; font-weight: 500; color: var(--ink-muted); cursor: pointer; white-space: nowrap;
+  min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: transparent;
+  font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; white-space: nowrap;
   transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }
-.nav button[aria-current="page"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.nav button svg { width: 20px; height: 20px; }
+.nav button[aria-current="page"] { background: var(--brand); color: var(--on-brand); }
 .nav .pill {
-  min-width: 20px; padding: 0 6px; height: 20px; border-radius: 999px;
+  min-width: 24px; padding: 0 7px; height: 22px; box-sizing: border-box; border-radius: 999px;
   display: grid; place-items: center; font-family: var(--font-num); font-size: 12px; font-weight: 600;
   background: var(--primary-light); color: var(--primary-dark);
 }
-.nav button[aria-current="page"] .pill { background: var(--primary); color: #0c1919; }
+.nav button[aria-current="page"] .pill { background: color-mix(in srgb, var(--on-brand) 20%, transparent); color: inherit; }
 
 /* Detail sheet */
 .scrim {
@@ -384,7 +435,7 @@ button { font: inherit; color: inherit; }
 .sheet h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
 .sheet .status { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
 .sheet .status.ready { background: var(--primary-light); color: var(--primary-dark); }
-.sheet .status.almost, .sheet .status.far { background: var(--accent-light); color: var(--accent); }
+.sheet .status.almost, .sheet .status.far { background: var(--accent-light); color: var(--accent-ink); }
 .sheet .facts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-radius: 16px; background: var(--line-soft); }
 .sheet .fact { padding: 10px 14px; min-width: 0; }
 .sheet .fact + .fact { border-left: 1px solid var(--line); }
@@ -399,13 +450,19 @@ button { font: inherit; color: inherit; }
 }
 .ing-list .st { width: 18px; height: 18px; margin-top: 2px; }
 .ing-list .have .st { color: var(--primary-dark); }
-.ing-list .miss .st { color: var(--accent); }
+.ing-list .miss .st { color: var(--accent-ink); }
 .ing-list .skip .st, .ing-list .skip .n { color: var(--ink-faint); }
 .ing-list .n { min-width: 0; }
 .ing-list .sub { display: block; font-size: 12px; color: var(--ink-muted); }
-.ing-list .miss .sub { color: var(--accent); }
+.ing-list .miss .sub { color: var(--accent-ink); }
 .ing-list .q { font-family: var(--font-num); font-size: 13px; color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .steps { margin: 0; white-space: pre-line; font-size: 15px; line-height: 1.7; }
+.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.step-list li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; font-size: 15px; line-height: 1.7; }
+.step-list .no {
+  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--primary-light); color: var(--primary-dark); font-family: var(--font-num); font-size: 14px; font-weight: 600;
+}
 .src {
   display: inline-flex; align-items: center; gap: 6px; color: var(--primary-dark); font-weight: 600;
   text-decoration: none; word-break: break-all;
@@ -419,11 +476,15 @@ button { font: inherit; color: inherit; }
 .login {
   position: fixed; inset: 0; z-index: 50; background: var(--bg);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-  padding: 24px 16px; text-align: center;
+  padding: 24px 16px; text-align: center; overflow: hidden;
 }
+.login::before, .login::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+.login::before { left: -80px; top: -120px; width: 360px; height: 360px; background: var(--primary-light); }
+.login::after { right: -90px; top: 120px; width: 220px; height: 220px; background: var(--track); }
+.login > * { position: relative; }
 .login[hidden] { display: none; }
-.login img { width: 88px; height: 88px; border-radius: 22px; box-shadow: var(--shadow-card); }
-.login h2 { margin: 4px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+.login img { width: 96px; height: 96px; border-radius: 28px; box-shadow: 0 16px 32px -12px rgba(11, 79, 85, 0.5); }
+.login h2 { margin: 8px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
 .login p { margin: 0; max-width: 300px; font-size: 14px; color: var(--ink-muted); }
 .login #gbtn { min-height: 44px; margin-top: 6px; }
 
@@ -432,8 +493,8 @@ button { font: inherit; color: inherit; }
   .sheet, .scrim { transition: opacity 150ms linear; }
   .sheet { transform: none; opacity: 0; }
   .sheet.open { opacity: 1; }
-  .chip, .menu-card, .sync { transition: none; }
-  .chip:active, .menu-card:active, .sync:active { transform: none; }
+  .chip, .menu-card, .sync, .hero { transition: none; }
+  .chip:active, .menu-card:active, .sync:active, .hero:active { transform: none; }
 }
 </style>
 
@@ -442,8 +503,8 @@ button { font: inherit; color: inherit; }
 <div class="app">
   <header class="head">
     <div>
-      <h1>วันนี้ทำอะไรกิน</h1>
       <p class="sub" id="syncLabel">กำลังโหลด</p>
+      <h1 id="headTitle">วันนี้ทำอะไรกิน</h1>
     </div>
     <button class="sync" id="sync" type="button" aria-label="โหลดข้อมูลจากชีตใหม่">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
@@ -452,21 +513,12 @@ button { font: inherit; color: inherit; }
 
   <div id="notice" hidden></div>
 
-  <section class="hero" aria-live="polite">
-    <div class="top"><span class="lbl">ทำได้เลยตอนนี้</span><span class="of">จากทั้งหมด <span class="num" id="sumTotal">–</span> เมนู</span></div>
-    <div class="amt"><span id="sumReady">0</span><small>เมนู</small></div>
-    <div class="split">
-      <button type="button" data-view="pantry" id="heroPantry"><small>ของที่มี</small><b id="sumPicked">0</b></button>
-      <button type="button" data-view="menus" id="heroMenus" class="almost"><small>ขาดอีกนิด</small><b id="sumAlmost">0</b></button>
-    </div>
-  </section>
-
   <main id="view" class="view"></main>
 </div>
 
 <nav class="nav" aria-label="สลับหน้า">
-  <button type="button" id="navPantry" data-view="pantry">ของที่มี <span class="pill num" id="pillPantry">0</span></button>
-  <button type="button" id="navMenus" data-view="menus">เมนู <span class="pill num" id="pillMenus">0</span></button>
+  <button type="button" id="navPantry" data-view="pantry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5 10a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 9z"/><path d="M8 9l3-5M16 9l-3-5"/></svg>ของที่มี <span class="pill num" id="pillPantry">0</span></button>
+  <button type="button" id="navMenus" data-view="menus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5"/></svg>เมนู <span class="pill num" id="pillMenus">0</span></button>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -520,7 +572,10 @@ button { font: inherit; color: inherit; }
     chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    emptyBowl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5" stroke-dasharray="1.6 1.6"/></svg>',
   };
+  const ALL = "ทั้งหมด";
 
   const state = {
     raw: { recipes: null, rows: null, ingredients: null },
@@ -531,6 +586,8 @@ button { font: inherit; color: inherit; }
     search: "",
     menuSearch: "",
     cat: "ทั้งหมด",
+    menuTab: "ready", // ready | almost
+    pantryType: "ทั้งหมด",
     selected: new Set(loadSelected()),
     plan: new Set(loadPlan()),
     openRecipe: null,
@@ -656,10 +713,12 @@ button { font: inherit; color: inherit; }
     const ready = results.filter((x) => x.level === "ready");
     const almost = results.filter((x) => x.level === "almost");
 
-    $("sumPicked").textContent = state.selected.size;
-    $("sumReady").textContent = m ? ready.length : "–";
-    $("sumAlmost").textContent = m ? almost.length : "–";
-    $("sumTotal").textContent = m ? m.recipes.length : "–";
+    $("headTitle").textContent = !m ? "วันนี้ทำอะไรกิน"
+      : state.view === "pantry" ? "ของที่มีในครัว"
+      : state.menuSearch.trim() ? "ค้นหาเมนู"
+      : !state.selected.size && !state.plan.size ? "วันนี้ทำอะไรกิน"
+      : state.menuTab === "almost" ? `ขาดอีกนิด ${almost.length} เมนู`
+      : `มื้อนี้ทำได้เลย ${ready.length} เมนู`;
     $("pillPantry").textContent = state.selected.size;
     $("pillMenus").textContent = m ? ready.length : 0;
 
@@ -668,8 +727,6 @@ button { font: inherit; color: inherit; }
 
     $("navPantry").setAttribute("aria-current", state.view === "pantry" ? "page" : "false");
     $("navMenus").setAttribute("aria-current", state.view === "menus" ? "page" : "false");
-    $("heroPantry").setAttribute("aria-current", state.view === "pantry" ? "page" : "false");
-    $("heroMenus").setAttribute("aria-current", state.view === "menus" ? "page" : "false");
 
     const view = $("view");
     if (lastView !== state.view) {
@@ -680,7 +737,7 @@ button { font: inherit; color: inherit; }
     }
 
     if (!m) { view.innerHTML = loadingHtml(); return; }
-    view.innerHTML = state.view === "pantry" ? pantryHtml(m) : menusHtml(m, ready, almost, results);
+    view.innerHTML = state.view === "pantry" ? pantryHtml(m, ready) : menusHtml(m, ready, almost, results);
     if (state.view === "menus") {
       const mq = $("mq");
       if (mq) mq.addEventListener("input", (e) => {
@@ -712,16 +769,21 @@ button { font: inherit; color: inherit; }
     return `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
   }
 
-  function pantryHtml(m) {
+  function pantryHtml(m, ready) {
     const q = state.search.trim().toLowerCase();
+    const typeOfName = (type) => (TYPE_COLOR[type] ? type : OTHER);
+    // type tabs come from the whole list, so they stay put while searching
+    const allTypes = TYPE_ORDER.map(([t]) => t).filter((t) => [...m.typeOf.values()].some((v) => typeOfName(v) === t));
+    if (!allTypes.includes(state.pantryType)) state.pantryType = ALL;
     const groups = new Map();
     for (const [name, type] of m.typeOf) {
       if (q && !name.toLowerCase().includes(q)) continue;
-      const t = TYPE_COLOR[type] ? type : OTHER;
+      const t = typeOfName(type);
+      if (state.pantryType !== ALL && t !== state.pantryType) continue;
       if (!groups.has(t)) groups.set(t, []);
       groups.get(t).push(name);
     }
-    const order = TYPE_ORDER.map(([t]) => t).filter((t) => groups.has(t));
+    const order = allTypes.filter((t) => groups.has(t));
     const groupHtml = order.map((t) => {
       const names = groups.get(t).sort((a, b) => a.localeCompare(b, "th"));
       const on = names.filter((n) => state.selected.has(n)).length;
@@ -735,8 +797,21 @@ button { font: inherit; color: inherit; }
       ? `<div class="card empty"><h3>ยังไม่มีวัตถุดิบในชีต</h3><p>เพิ่มวัตถุดิบในแท็บ "วัตถุดิบ" ของ Google Sheet แล้วกดโหลดใหม่</p></div>`
       : `<div class="card empty"><h3>ไม่เจอ "${esc(state.search)}"</h3><p>ถ้ายังไม่มีในรายการ ให้เพิ่มในแท็บ "วัตถุดิบ" ของชีตก่อน</p></div>`;
 
+    const summary = `<button type="button" class="hero summary" data-view="menus">
+        <span class="txt"><span class="meta">เลือกไว้แล้ว</span><span class="title"><span class="num">${state.selected.size}</span> อย่าง</span></span>
+        <span class="cta">ทำได้ <span class="num">${ready.length}</span> เมนู${ICON.chev}</span>
+      </button>`;
+    const typeTabs = allTypes.length > 1
+      ? `<div class="filters" role="group" aria-label="กรองตามประเภท">
+          <button type="button" class="filter" data-ptype="${ALL}" aria-pressed="${state.pantryType === ALL}">${ALL}</button>
+          ${allTypes.map((t) => `<button type="button" class="filter" data-ptype="${esc(t)}" aria-pressed="${t === state.pantryType}" style="--c: var(${TYPE_COLOR[t]})"><span class="cdot"></span>${esc(t)}</button>`).join("")}
+        </div>`
+      : "";
+
     return `
+      ${summary}
       <label class="search" for="q">${ICON.search}<input id="q" type="search" placeholder="ค้นหาวัตถุดิบ" value="${esc(state.search)}" autocomplete="off"></label>
+      ${typeTabs}
       <div class="row-between">
         <span class="picked">ติ๊กของที่มีในครัวตอนนี้ รวมเครื่องปรุงด้วย</span>
         <button type="button" class="link-btn" id="clear" ${state.selected.size ? "" : "disabled"}>ล้างทั้งหมด</button>
@@ -755,7 +830,7 @@ button { font: inherit; color: inherit; }
     const card = (x) => {
       let extra = "";
       if (x.level === "almost") {
-        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`;
+        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}${state.plan.has(x.recipe.name) ? " · อยู่ในรายการซื้อ" : ""}</span>`;
       } else if (x.level === "far") {
         extra = `<span class="need">${x.items.length ? `ขาด ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>`;
       } else if (x.swaps.length) {
@@ -785,29 +860,59 @@ button { font: inherit; color: inherit; }
     }
 
     if (!state.selected.size && !state.plan.size) {
-      return `${searchBox}<div class="card empty"><h3>ยังไม่ได้บอกว่ามีอะไรบ้าง</h3><p>ติ๊กของที่มีในครัวก่อน แล้วหน้านี้จะบอกว่าทำเมนูไหนได้</p><button type="button" data-goto="pantry">ไปติ๊กของที่มี</button></div>`;
+      return `<div class="card empty big"><span class="art" aria-hidden="true">${ICON.emptyBowl}</span><h3>ยังไม่ได้บอกว่ามีอะไรบ้าง</h3><p>ติ๊กของที่มีในครัวก่อน แล้วหน้านี้จะบอกว่าทำเมนูไหนได้</p><button type="button" data-goto="pantry">ไปติ๊กของที่มี</button></div>
+        ${searchBox}
+        <p class="foot">มีสูตรในชีตทั้งหมด <span class="num">${m.recipes.length}</span> เมนู</p>`;
     }
-    const cats = ["ทั้งหมด", ...new Set([...ready, ...almost].map((x) => x.recipe.cat))];
-    if (!cats.includes(state.cat)) state.cat = "ทั้งหมด";
-    const inCat = (x) => state.cat === "ทั้งหมด" || x.recipe.cat === state.cat;
-    const r = ready.filter(inCat).sort(byTime);
-    const a = almost.filter(inCat).sort(byMissing);
+
+    // two tabs: ทำได้เลย (hero + ready list) and ขาดอีกนิด (buy-to-unlock, almost list, shopping list)
+    const tab = state.menuTab;
+    const pool = tab === "almost" ? almost : ready;
+    const cats = [ALL, ...new Set(pool.map((x) => x.recipe.cat))];
+    if (!cats.includes(state.cat)) state.cat = ALL;
+    const inCat = (x) => state.cat === ALL || x.recipe.cat === state.cat;
+    const list = pool.filter(inCat).sort(tab === "almost" ? byMissing : byTime);
 
     const filters = cats.length > 2
       ? `<div class="filters" role="group" aria-label="กรองตามหมวด">${cats.map((c) => `<button type="button" class="filter" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join("")}</div>`
       : "";
+    const seg = `<div class="seg" role="group" aria-label="สลับรายการเมนู">
+        <button type="button" data-tab="ready" aria-pressed="${tab === "ready"}">ทำได้เลย <span class="cnt ready">${ready.length}</span></button>
+        <button type="button" data-tab="almost" aria-pressed="${tab === "almost"}">ขาดอีกนิด <span class="cnt almost">${almost.length}</span></button>
+      </div>`;
 
-    const readyBlock = r.length
-      ? section("ready", "ทำได้เลย", r)
-      : `<div class="section-head ready"><h2>ทำได้เลย</h2><span class="count num">0</span></div>
-         <div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูเมนูที่ขาดอีกนิดด้านล่าง" : ""}</p></div>`;
+    if (tab === "ready") {
+      const listBlock = list.length
+        ? `<div class="card list">${list.map(card).join("")}</div>`
+        : ready.length ? "" : `<div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูแท็บขาดอีกนิด" : ""}</p></div>`;
+      return `${heroHtml(m, ready, byTime)}${seg}${searchBox}${filters}${listBlock}`;
+    }
+    const listBlock = list.length
+      ? `<div class="card list">${list.map(card).join("")}</div>`
+      : `<div class="card empty"><p>ยังไม่มีเมนูที่ขาดแค่ 1–${ALMOST_MAX} อย่าง</p></div>`;
+    return `${seg}${unlockHtml(results)}${searchBox}${filters}${listBlock}${shopHtml(results)}`;
+  }
 
-    return `${searchBox}
-      ${shopHtml(results)}
-      ${filters}
-      ${readyBlock}
-      ${unlockHtml(results)}
-      ${section("almost", "ขาดอีกนิด", a)}`;
+  // the quickest ready menu, plus a ring of ready / all menus
+  function heroHtml(m, ready, byTime) {
+    const total = m.recipes.length;
+    const C = 163.36; // 2π × 26
+    const dash = total ? (C * ready.length) / total : 0;
+    const ring = `<span class="ring"><span class="rw"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,.22)" stroke-width="6"/>${dash ? `<circle cx="32" cy="32" r="26" stroke="#8ee3dd" stroke-width="6" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}"/>` : ""}</svg><b>${ready.length}</b></span><span>จาก <span class="num">${total}</span> เมนู</span></span>`;
+    const top = [...ready].sort(byTime)[0];
+    if (!top) {
+      return `<div class="hero static"><span class="top"><span class="txt"><span class="title">ยังไม่มีเมนูที่ของครบ</span><span class="meta">ลองดูแท็บขาดอีกนิด หรือติ๊กของเพิ่ม</span></span>${ring}</span></div>`;
+    }
+    const r = top.recipe;
+    const bits = [
+      r.time != null ? `${r.time} นาที` : "",
+      r.serves != null ? `${r.serves} ที่` : "",
+      top.swaps.length ? "ใช้ของแทนบางอย่าง" : "วัตถุดิบครบ",
+    ].filter(Boolean).join(" · ");
+    return `<button type="button" class="hero" data-recipe="${esc(r.name)}">
+        <span class="top"><span class="txt"><span class="kicker">${ICON.clock}แนะนำมื้อนี้${r.time != null ? " · เร็วสุด" : ""}</span><span class="title">${esc(r.name)}</span><span class="meta">${bits}</span></span>${ring}</span>
+        <span class="cta">ดูวิธีทำ${ICON.chev}</span>
+      </button>`;
   }
 
   // menus the user put on the shopping list → what is still missing, tap an item once it is bought
@@ -819,26 +924,25 @@ button { font: inherit; color: inherit; }
         <span class="t"><b>${esc(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
       </button>`).join("");
     return `<section class="card tool">
-      <div class="tool-head"><h2>รายการซื้อของ</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
+      <div class="tool-head"><h2>รายการซื้อ${list.size ? ` <span class="cnt ready">${list.size}</span>` : ""}</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
       <p class="tool-sub">${rows ? "ซื้อแล้วแตะที่ชื่อ ของจะถูกนับว่ามีในครัว" : "ของครบทุกเมนูในรายการแล้ว"}</p>
       ${rows}
     </section>`;
   }
 
-  // one ingredient that unlocks several menus at once (only worth showing for 2+ menus)
+  // one missing ingredient → the menus it completes; most menus first
   function unlockHtml(results) {
     const rows = [...unlockMap(results)]
-      .filter(([, ms]) => ms.length >= 2)
       .sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], "th"))
       .slice(0, 5);
     if (!rows.length) return "";
     return `<section class="card tool">
-      <div class="tool-head"><h2>ซื้อเพิ่มอะไรดี</h2></div>
-      <p class="tool-sub">ซื้ออย่างเดียว ทำได้เพิ่มหลายเมนู</p>
+      <div class="tool-head"><h2>ซื้อเพิ่มอย่างเดียว ทำได้เลย</h2></div>
+      <p class="tool-sub">ขาดอยู่ชิ้นเดียว ซื้อมาแล้วเมนูจะครบ</p>
       ${rows.map(([name, ms]) => {
         const added = ms.every((n) => state.plan.has(n));
-        return `<div class="tool-row"><div class="t"><b>${esc(name)} <span class="num">+${ms.length}</span> เมนู</b><small>${ms.map(esc).join(" · ")}</small></div>
-          <button type="button" class="pill-btn" data-unlock="${esc(name)}" ${added ? "disabled" : ""}>${added ? "อยู่ในรายการ" : "ใส่รายการซื้อ"}</button></div>`;
+        return `<div class="tool-row"><div class="t"><b>${esc(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
+          <button type="button" class="pill-btn${added ? " ghost" : ""}" data-unlock="${esc(name)}" ${added ? "disabled" : ""}>${added ? `${ICON.check}เพิ่มแล้ว` : `${ICON.plus}รายการซื้อ`}</button></div>`;
       }).join("")}
     </section>`;
   }
@@ -865,6 +969,12 @@ button { font: inherit; color: inherit; }
 
   // ---------- detail sheet ----------
   let lastFocus = null;
+  // steps written one per line in the sheet (numbered or not) → a numbered list; a single paragraph stays as text
+  function stepsHtml(text) {
+    const lines = text.split(/\n+/).map((s) => s.replace(/^\s*(\d+\s*[.)]|[-•])\s*/, "").trim()).filter(Boolean);
+    if (lines.length < 2) return `<p class="steps">${esc(text)}</p>`;
+    return `<ol class="step-list">${lines.map((s, i) => `<li><span class="no">${i + 1}</span><span>${esc(s)}</span></li>`).join("")}</ol>`;
+  }
   function fillSheet(x) {
     const r = x.recipe;
     const rowHtml = (i) => {
@@ -891,7 +1001,7 @@ button { font: inherit; color: inherit; }
       </div>
       ${x.items.length ? `<section><h3>วัตถุดิบ</h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
       ${x.level !== "ready" && x.missing.length ? `<button type="button" class="pill-btn wide ${state.plan.has(r.name) ? "ghost" : ""}" data-plan="${esc(r.name)}">${state.plan.has(r.name) ? "เอาออกจากรายการซื้อของ" : "ใส่รายการซื้อของ"}</button>` : ""}
-      ${r.steps ? `<section><h3>ขั้นตอน</h3><p class="steps">${esc(r.steps)}</p></section>` : ""}
+      ${r.steps ? `<section><h3>ขั้นตอน</h3>${stepsHtml(r.steps)}</section>` : ""}
       ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
       ${url ? `<section><h3>สูตรต้นทาง</h3><a class="src" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ICON.link}${esc(url)}</a></section>` : ""}
       ${r.note ? `<section><h3>หมายเหตุ</h3><p class="note">${esc(r.note)}</p></section>` : ""}`;
@@ -937,6 +1047,8 @@ button { font: inherit; color: inherit; }
       return render();
     }
     if (t.dataset.cat) { state.cat = t.dataset.cat; return render(); }
+    if (t.dataset.tab) { state.menuTab = t.dataset.tab; state.cat = ALL; return render(); }
+    if (t.dataset.ptype) { state.pantryType = t.dataset.ptype; return render(); }
     if (t.dataset.plan) {
       const n = t.dataset.plan;
       state.plan.has(n) ? state.plan.delete(n) : state.plan.add(n);
