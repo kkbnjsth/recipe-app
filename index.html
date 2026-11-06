@@ -272,6 +272,77 @@ button { font: inherit; color: inherit; }
   outline: 2px solid var(--primary); outline-offset: 2px;
 }
 
+/* Pantry: only what is in the kitchen now (× when it runs out), new things come from the add sheet */
+.chip.have {
+  gap: 8px; padding: 8px 12px 8px 16px; font-weight: 600;
+  background: color-mix(in srgb, var(--c) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, transparent);
+}
+.chip.have svg { width: 14px; height: 14px; opacity: 0.55; }
+.chip.add { gap: 6px; padding: 8px 16px 8px 12px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-faint); }
+.chip.add svg { width: 14px; height: 14px; }
+.add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); font-size: 16px; font-weight: 600;
+  box-shadow: 0 10px 22px -10px rgba(11, 61, 66, 0.6);
+  transition: transform 140ms var(--ease-out);
+}
+.add-btn:active { transform: scale(0.98); }
+.add-btn svg { width: 18px; height: 18px; }
+.quick { display: flex; flex-direction: column; gap: 8px; }
+.quick p { margin: 0 4px; font-size: 13px; font-weight: 500; color: var(--ink-muted); }
+
+/* Add sheet: one collapsible card per ingredient type */
+.sheet.add { height: 88%; background: var(--bg); }
+.add-head { flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 6px 20px 12px; }
+.add-head .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.add-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.add-head .link-btn { min-height: 44px; font-size: 14px; }
+.sheet.add .scroll { flex: 1; min-height: 0; padding-top: 0; padding-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+.asec { flex-shrink: 0; overflow: hidden; border-radius: 20px; background: var(--surface); box-shadow: var(--shadow-card); }
+.asec-head {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 16px;
+  border: 0; background: transparent; text-align: left; cursor: pointer;
+}
+.asec-head .cdot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+.asec-head .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.asec-head b { font-size: 16px; font-weight: 700; }
+.asec-head small { font-size: 13px; font-weight: 600; color: var(--brand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asec-head .count { font-size: 13px; color: var(--ink-muted); }
+.asec-head .chev { width: 18px; height: 18px; flex-shrink: 0; color: var(--ink-faint); transition: transform 200ms var(--ease-out); }
+.asec-head[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.asec-all { padding: 0 8px; border-top: 1px solid var(--line-soft); }
+.asec-all .link-btn { min-height: 44px; padding: 0 8px; font-size: 14px; }
+.arow {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 16px;
+  border: 0; border-top: 1px solid var(--line-soft); background: transparent;
+  text-align: left; font-size: 16px; cursor: pointer;
+}
+.arow .n { flex: 1; min-width: 0; }
+.arow .note { font-size: 13px; color: var(--ink-muted); }
+.arow .box {
+  width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 9px; border: 2px solid var(--ink-faint); color: var(--surface);
+}
+.arow .box svg { width: 15px; height: 15px; display: none; }
+.arow[aria-pressed="true"] .box { background: var(--c); border-color: var(--c); }
+.arow[aria-pressed="true"] .box svg { display: block; }
+.arow:disabled { cursor: default; opacity: 0.7; }
+.arow:disabled .box { background: var(--ink-faint); border-color: var(--ink-faint); }
+.add-none { margin: 32px 8px; text-align: center; font-size: 14px; color: var(--ink-muted); }
+.add-foot {
+  flex-shrink: 0; padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface); border-top: 1px solid var(--line-soft);
+}
+.add-foot button {
+  width: 100%; min-height: 52px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); font-size: 16px; font-weight: 600;
+}
+.add-btn:focus-visible, .asec-head:focus-visible, .arow:focus-visible, .add-foot button:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+
 /* Filters */
 .filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin: -2px -2px -6px; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
@@ -527,6 +598,16 @@ button { font: inherit; color: inherit; }
   <div class="scroll" id="sheetBody"></div>
 </div>
 
+<div class="sheet add" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addTitle" hidden>
+  <div class="grab"></div>
+  <div class="add-head">
+    <div class="row"><h2 id="addTitle">เพิ่มของ</h2><button type="button" class="link-btn" id="addClose">ปิด</button></div>
+    <label class="search" for="aq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="aq" type="search" placeholder="พิมพ์ชื่อของที่ซื้อมา" autocomplete="off"></label>
+  </div>
+  <div class="scroll" id="addBody"></div>
+  <div class="add-foot"><button type="button" id="addDone">เสร็จ</button></div>
+</div>
+
 <div class="login" id="login" hidden>
   <img src="apple-touch-icon.png?v=1" alt="">
   <h2>วันนี้ทำอะไรกิน</h2>
@@ -540,6 +621,7 @@ button { font: inherit; color: inherit; }
   const ALMOST_MAX = 2;
   const STORE_KEY = "recipe-finder:selected";
   const PLAN_KEY = "recipe-finder:plan"; // menus added to the shopping list
+  const FREQ_KEY = "recipe-finder:freq"; // ingredient → times added, for the "เพิ่มบ่อย" row
 
   // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
   const API_URL = "https://script.google.com/macros/s/AKfycbxLo1n0SuPjIpr0CTiRSFnpjIHZYSZEq6bkb555f3ye1eBsCs-UsAEzTKega9Fz3ynE3Q/exec";
@@ -573,6 +655,7 @@ button { font: inherit; color: inherit; }
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     emptyBowl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5" stroke-dasharray="1.6 1.6"/></svg>',
   };
   const ALL = "ทั้งหมด";
@@ -583,14 +666,18 @@ button { font: inherit; color: inherit; }
     loading: true,
     notice: null, // {code, text, action?}
     view: "pantry",
-    search: "",
     menuSearch: "",
     cat: "ทั้งหมด",
     menuTab: "ready", // ready | almost
-    pantryType: "ทั้งหมด",
     selected: new Set(loadSelected()),
     plan: new Set(loadPlan()),
+    freq: loadFreq(),
     openRecipe: null,
+    // add sheet: ticks stay in `pending` until "เสร็จ"
+    adding: false,
+    addSearch: "",
+    addOpen: null,
+    pending: new Set(),
   };
 
   // ---------- storage (per-viewer convenience only) ----------
@@ -605,6 +692,14 @@ button { font: inherit; color: inherit; }
   }
   function savePlan() {
     try { localStorage.setItem(PLAN_KEY, JSON.stringify([...state.plan])); } catch {}
+  }
+  function loadFreq() {
+    try { const f = JSON.parse(localStorage.getItem(FREQ_KEY) || "{}"); return f && typeof f === "object" ? f : {}; } catch { return {}; }
+  }
+  const freqOf = (n) => (Object.prototype.hasOwnProperty.call(state.freq, n) ? Number(state.freq[n]) || 0 : 0);
+  function bumpFreq(names) {
+    for (const n of names) state.freq[n] = freqOf(n) + 1;
+    try { localStorage.setItem(FREQ_KEY, JSON.stringify(state.freq)); } catch {}
   }
 
   // ---------- parsing ----------
@@ -747,15 +842,7 @@ button { font: inherit; color: inherit; }
         const again = $("mq"); again.focus(); again.setSelectionRange(pos, pos);
       });
     }
-    if (state.view === "pantry") {
-      const input = $("q");
-      input.addEventListener("input", (e) => {
-        state.search = e.target.value;
-        const pos = e.target.selectionStart;
-        render();
-        const again = $("q"); again.focus(); again.setSelectionRange(pos, pos);
-      });
-    }
+    renderAdd(m);
     if (state.openRecipe) {
       const hit = results.find((x) => x.recipe.name === state.openRecipe);
       if (hit) fillSheet(hit); else closeSheet();
@@ -769,54 +856,56 @@ button { font: inherit; color: inherit; }
     return `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
   }
 
-  function pantryHtml(m, ready) {
-    const q = state.search.trim().toLowerCase();
-    const typeOfName = (type) => (TYPE_COLOR[type] ? type : OTHER);
-    // type tabs come from the whole list, so they stay put while searching
-    const allTypes = TYPE_ORDER.map(([t]) => t).filter((t) => [...m.typeOf.values()].some((v) => typeOfName(v) === t));
-    if (!allTypes.includes(state.pantryType)) state.pantryType = ALL;
+  // names → [[type, sorted names]] in TYPE_ORDER; unknown types (or names no longer in the sheet) go to อื่นๆ
+  const groupOf = (type) => (TYPE_COLOR[type] ? type : OTHER);
+  function byType(names, m) {
     const groups = new Map();
-    for (const [name, type] of m.typeOf) {
-      if (q && !name.toLowerCase().includes(q)) continue;
-      const t = typeOfName(type);
-      if (state.pantryType !== ALL && t !== state.pantryType) continue;
+    for (const n of names) {
+      const t = groupOf(m.typeOf.get(n));
       if (!groups.has(t)) groups.set(t, []);
-      groups.get(t).push(name);
+      groups.get(t).push(n);
     }
-    const order = allTypes.filter((t) => groups.has(t));
-    const groupHtml = order.map((t) => {
-      const names = groups.get(t).sort((a, b) => a.localeCompare(b, "th"));
-      const on = names.filter((n) => state.selected.has(n)).length;
-      return `<section class="card group" style="--c: var(${TYPE_COLOR[t]})">
-        <h2><span class="cdot"></span>${esc(t)}<span class="count">${on}/${names.length}</span></h2>
-        <div class="chips">${names.map((n) => `<button type="button" class="chip" data-ing="${esc(n)}" aria-pressed="${state.selected.has(n)}">${ICON.check.replace("<svg", '<svg class="tick"')}${esc(n)}</button>`).join("")}</div>
-      </section>`;
-    }).join("");
+    for (const list of groups.values()) list.sort((a, b) => a.localeCompare(b, "th"));
+    return TYPE_ORDER.map(([t]) => t).filter((t) => groups.has(t)).map((t) => [t, groups.get(t)]);
+  }
 
-    const none = m.typeOf.size === 0
-      ? `<div class="card empty"><h3>ยังไม่มีวัตถุดิบในชีต</h3><p>เพิ่มวัตถุดิบในแท็บ "วัตถุดิบ" ของ Google Sheet แล้วกดโหลดใหม่</p></div>`
-      : `<div class="card empty"><h3>ไม่เจอ "${esc(state.search)}"</h3><p>ถ้ายังไม่มีในรายการ ให้เพิ่มในแท็บ "วัตถุดิบ" ของชีตก่อน</p></div>`;
-
+  // the kitchen as it is now: only what is ticked, × when it runs out; new things come in through the add sheet
+  function pantryHtml(m, ready) {
     const summary = `<button type="button" class="hero summary" data-view="menus">
-        <span class="txt"><span class="meta">เลือกไว้แล้ว</span><span class="title"><span class="num">${state.selected.size}</span> อย่าง</span></span>
+        <span class="txt"><span class="meta">มีของอยู่</span><span class="title"><span class="num">${state.selected.size}</span> อย่าง</span></span>
         <span class="cta">ทำได้ <span class="num">${ready.length}</span> เมนู${ICON.chev}</span>
       </button>`;
-    const typeTabs = allTypes.length > 1
-      ? `<div class="filters" role="group" aria-label="กรองตามประเภท">
-          <button type="button" class="filter" data-ptype="${ALL}" aria-pressed="${state.pantryType === ALL}">${ALL}</button>
-          ${allTypes.map((t) => `<button type="button" class="filter" data-ptype="${esc(t)}" aria-pressed="${t === state.pantryType}" style="--c: var(${TYPE_COLOR[t]})"><span class="cdot"></span>${esc(t)}</button>`).join("")}
-        </div>`
+    if (m.typeOf.size === 0) {
+      return `${summary}<div class="card empty"><h3>ยังไม่มีวัตถุดิบในชีต</h3><p>เพิ่มวัตถุดิบในแท็บ "วัตถุดิบ" ของ Google Sheet แล้วกดโหลดใหม่</p></div>`;
+    }
+
+    const quick = [...m.typeOf.keys()]
+      .filter((n) => freqOf(n) > 0 && !state.selected.has(n))
+      .sort((a, b) => freqOf(b) - freqOf(a) || a.localeCompare(b, "th"))
+      .slice(0, 6);
+    const quickHtml = quick.length
+      ? `<section class="quick" aria-label="ของที่เพิ่มบ่อย"><p>ของที่เพิ่มบ่อย แตะเพื่อเพิ่ม</p>
+          <div class="chips">${quick.map((n) => `<button type="button" class="chip add" data-qadd="${esc(n)}">${ICON.plus}${esc(n)}</button>`).join("")}</div>
+        </section>`
       : "";
+
+    const groups = byType([...state.selected], m);
+    const listHtml = groups.length
+      ? `<div class="row-between">
+          <span class="picked">แตะ × เมื่อของหมด</span>
+          <button type="button" class="link-btn" id="clear">ล้างทั้งหมด</button>
+        </div>
+        ${groups.map(([t, names]) => `<section class="card group" style="--c: var(${TYPE_COLOR[t]})">
+          <h2><span class="cdot"></span>${esc(t)}<span class="count">${names.length}</span></h2>
+          <div class="chips">${names.map((n) => `<button type="button" class="chip have" data-rm="${esc(n)}" aria-label="${esc(n)} แตะเพื่อเอาออก">${esc(n)}${ICON.x}</button>`).join("")}</div>
+        </section>`).join("")}`
+      : `<div class="card empty"><h3>ยังไม่มีของในครัว</h3><p>กดเพิ่มของ แล้วเลือกของที่มีอยู่ตอนนี้ รวมเครื่องปรุงด้วย</p></div>`;
 
     return `
       ${summary}
-      <label class="search" for="q">${ICON.search}<input id="q" type="search" placeholder="ค้นหาวัตถุดิบ" value="${esc(state.search)}" autocomplete="off"></label>
-      ${typeTabs}
-      <div class="row-between">
-        <span class="picked">ติ๊กของที่มีในครัวตอนนี้ รวมเครื่องปรุงด้วย</span>
-        <button type="button" class="link-btn" id="clear" ${state.selected.size ? "" : "disabled"}>ล้างทั้งหมด</button>
-      </div>
-      ${order.length ? groupHtml : none}`;
+      <button type="button" class="add-btn" id="addOpen">${ICON.plus}เพิ่มของ</button>
+      ${quickHtml}
+      ${listHtml}`;
   }
 
   function menusHtml(m, ready, almost, results) {
@@ -1026,21 +1115,100 @@ button { font: inherit; color: inherit; }
     state.openRecipe = null;
     const sheet = $("sheet"), scrim = $("scrim");
     sheet.classList.remove("open"); scrim.classList.remove("open");
-    setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; scrim.hidden = true; } }, 300);
+    setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; if (!state.adding) scrim.hidden = true; } }, 300);
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  // ---------- add sheet ----------
+  function addHtml(m) {
+    const q = state.addSearch.trim().toLowerCase();
+    const has = (n) => state.selected.has(n) || state.pending.has(n);
+    const secs = byType([...m.typeOf.keys()], m).map(([t, names]) => {
+      const list = q ? names.filter((n) => n.toLowerCase().includes(q)) : names;
+      if (!list.length) return "";
+      // while searching every type with a match is open, so all hits show at once
+      const open = q ? true : state.addOpen === t;
+      const fresh = names.filter((n) => state.pending.has(n));
+      const canAll = !q && names.some((n) => !has(n));
+      const rows = open ? list.map((n) => {
+        const owned = state.selected.has(n);
+        return `<button type="button" class="arow" data-apick="${esc(n)}" aria-pressed="${has(n)}" ${owned ? "disabled" : ""}>
+          <span class="n">${esc(n)}</span>${owned ? `<span class="note">มีแล้ว</span>` : ""}<span class="box" aria-hidden="true">${ICON.check}</span>
+        </button>`;
+      }).join("") : "";
+      return `<section class="asec" style="--c: var(${TYPE_COLOR[t]})">
+        <button type="button" class="asec-head" data-aopen="${esc(t)}" aria-expanded="${open}">
+          <span class="cdot"></span>
+          <span class="t"><b>${esc(t)}</b>${fresh.length ? `<small>เพิ่ม ${fresh.map(esc).join(", ")}</small>` : ""}</span>
+          <span class="count num">${names.filter(has).length}/${names.length}</span>
+          ${ICON.chev.replace("<svg", '<svg class="chev" aria-hidden="true"')}
+        </button>
+        ${open && canAll ? `<div class="asec-all"><button type="button" class="link-btn" data-aall="${esc(t)}">เลือกทั้งกลุ่ม</button></div>` : ""}
+        ${rows}
+      </section>`;
+    }).join("");
+    return secs || `<p class="add-none">ไม่เจอ "${esc(state.addSearch)}" ถ้ายังไม่มีในรายการ ให้เพิ่มในแท็บ "วัตถุดิบ" ของชีตก่อน</p>`;
+  }
+
+  function renderAdd(m = model()) {
+    if (!state.adding || !m) return;
+    $("addBody").innerHTML = addHtml(m);
+    const n = state.pending.size;
+    $("addDone").textContent = n ? `เสร็จ เพิ่ม ${n} อย่าง` : "เสร็จ";
+  }
+
+  function openAdd() {
+    if (!model()) return;
+    state.adding = true; state.addSearch = ""; state.pending = new Set();
+    $("aq").value = "";
+    lastFocus = document.activeElement;
+    renderAdd();
+    const sheet = $("addSheet"), scrim = $("scrim");
+    sheet.hidden = false; scrim.hidden = false;
+    $("addBody").scrollTop = 0;
+    requestAnimationFrame(() => { sheet.classList.add("open"); scrim.classList.add("open"); });
+    sheet.setAttribute("tabindex", "-1");
+    sheet.focus({ preventScroll: true });
+  }
+
+  // commit = "เสร็จ"; closing any other way (ปิด, scrim, Esc) drops the ticks
+  function closeAdd(commit) {
+    if (!state.adding) return;
+    if (commit && state.pending.size) {
+      for (const n of state.pending) state.selected.add(n);
+      bumpFreq([...state.pending]);
+      saveSelected();
+    }
+    state.adding = false; state.pending = new Set();
+    const sheet = $("addSheet"), scrim = $("scrim");
+    sheet.classList.remove("open"); scrim.classList.remove("open");
+    setTimeout(() => { if (!state.adding) { sheet.hidden = true; if (!state.openRecipe) scrim.hidden = true; } }, 300);
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    render();
   }
 
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     const t = e.target.closest("button, .scrim");
     if (!t) return;
-    if (t.id === "scrim") return closeSheet();
-    if (t.dataset.ing) {
-      const n = t.dataset.ing;
-      state.selected.has(n) ? state.selected.delete(n) : state.selected.add(n);
-      saveSelected();
-      return render();
+    if (t.id === "scrim") return state.adding ? closeAdd(false) : closeSheet();
+    if (t.id === "addOpen") return openAdd();
+    if (t.id === "addClose") return closeAdd(false);
+    if (t.id === "addDone") return closeAdd(true);
+    if (t.dataset.aopen) { state.addOpen = state.addOpen === t.dataset.aopen ? null : t.dataset.aopen; return renderAdd(); }
+    if (t.dataset.apick) {
+      const n = t.dataset.apick;
+      state.pending.has(n) ? state.pending.delete(n) : state.pending.add(n);
+      return renderAdd();
     }
+    if (t.dataset.aall) {
+      const m = model(); if (!m) return;
+      const hit = byType([...m.typeOf.keys()], m).find(([type]) => type === t.dataset.aall);
+      if (hit) hit[1].forEach((n) => { if (!state.selected.has(n)) state.pending.add(n); });
+      return renderAdd(m);
+    }
+    if (t.dataset.rm) { state.selected.delete(t.dataset.rm); saveSelected(); return render(); }
+    if (t.dataset.qadd) { state.selected.add(t.dataset.qadd); bumpFreq([t.dataset.qadd]); saveSelected(); return render(); }
     if (t.dataset.view || t.dataset.goto) {
       state.view = t.dataset.view || t.dataset.goto;
       window.scrollTo({ top: 0 });
@@ -1048,7 +1216,6 @@ button { font: inherit; color: inherit; }
     }
     if (t.dataset.cat) { state.cat = t.dataset.cat; return render(); }
     if (t.dataset.tab) { state.menuTab = t.dataset.tab; state.cat = ALL; return render(); }
-    if (t.dataset.ptype) { state.pantryType = t.dataset.ptype; return render(); }
     if (t.dataset.plan) {
       const n = t.dataset.plan;
       state.plan.has(n) ? state.plan.delete(n) : state.plan.add(n);
@@ -1069,7 +1236,8 @@ button { font: inherit; color: inherit; }
     if (t.id === "sync") return refresh();
     if (t.id === "noticeAction" && state.notice && state.notice.onAction) return state.notice.onAction();
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.adding) closeAdd(false); else closeSheet(); } });
+  $("aq").addEventListener("input", (e) => { state.addSearch = e.target.value; renderAdd(); });
 
   // ---------- Google sign-in ----------
   // ID token lives ~1 h; kept in localStorage so reopening the app within the hour skips the login screen.
