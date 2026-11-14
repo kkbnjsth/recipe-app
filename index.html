@@ -6,8 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>วันนี้ทำอะไรกิน</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#f2f8f6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0c1919" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ทำอะไรกิน">
@@ -18,35 +18,38 @@
 <script src="https://accounts.google.com/gsi/client" async></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Trirong:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap">
 <style>
-/* Layout: one mobile column, two views (ของที่มี / เมนู) switched by a floating nav capsule.
-   Colours: the app's own teal palette. Components: ChaiJaai-style — borderless white cards with a soft shadow,
-   inverted (ink) selected states, one gradient hero card, grouped lists; teal = ทำได้เลย, orange = ขาดอีกนิด */
+/* Layout: one mobile column, three views (ในครัว / เมนู / ซื้อ) switched by a dark floating nav capsule.
+   Design F (canvas): cookbook feel — Trirong serif headings with italic numbers, Google Sans body,
+   cream paper background, white cards with hairlines (no shadows), pill buttons.
+   Colours "Basil & Paprika": basil green = ทำได้เลย, paprika = ขาด/ซื้อ, turmeric = ใช้ของแทน */
 :root {
-  --bg: #f2f8f6;
+  --bg: #fbf8f2;
   --surface: #ffffff;
-  --ink: #0b3d42;
-  --ink-muted: #3f7378;
-  --ink-faint: #6c9498;
-  --brand: #10666d;
+  --ink: #1f2a24;
+  --ink-muted: #5b6b60;
+  --ink-faint: #8a968d;
+  --brand: #2f6b4f;
   --on-brand: #ffffff;
-  --primary: #59c9c9;
-  --primary-dark: #0b4f55;
-  --primary-light: #d5f2ec;
-  --accent: #c96a22;
-  --accent-ink: #8f4410;
-  --accent-light: #fce9d6;
-  --danger: #d64545;
-  --line: #c8e6e8;
-  --line-soft: #e6f0ef;
-  --chip: #eef5f4;
-  --track: #e1eeec;
-  --glass: rgba(255, 255, 255, 0.72);
-  --glass-edge: rgba(255, 255, 255, 0.85);
-  --scrim: rgba(16, 60, 64, 0.32);
-  --shadow-card: 0 1px 2px rgba(16, 102, 109, 0.06), 0 6px 20px rgba(16, 102, 109, 0.08);
-  --shadow-nav: 0 10px 28px -8px rgba(31, 42, 36, 0.22), 0 2px 6px rgba(31, 42, 36, 0.06);
+  --primary: #4f9a72;
+  --primary-dark: #24533d;
+  --primary-light: #dceee2;
+  --accent: #c2410c;
+  --accent-ink: #9a3412;
+  --accent-light: #fde8da;
+  --sub-bg: #fbefc8;
+  --sub-ink: #7a5200;
+  --danger: #b42318;
+  --line: #cfc3ae;
+  --line-soft: #ece4d6;
+  --chip: #f1ebe0;
+  --track: #f1ebe0;
+  --nav-bg: #1f2a24;
+  --nav-ink: #d5ded8;
+  --scrim: rgba(31, 42, 36, 0.36);
+  --shadow-card: inset 0 0 0 1px var(--line-soft);
+  --shadow-nav: 0 12px 28px -10px rgba(31, 42, 36, 0.45);
 
   --c-meat: #c1544a;
   --c-sea: #3f8fa0;
@@ -59,23 +62,24 @@
   --c-season: #b58a3f;
   --c-other: #6b7a70;
 
-  --font-body: "Poppins", "IBM Plex Sans Thai", "Thonburi", "Leelawadee UI", sans-serif;
-  --font-num: "Poppins", "IBM Plex Sans Thai", sans-serif;
-  --radius-card: 24px;
+  --font-body: "Google Sans", "Thonburi", "Leelawadee UI", sans-serif;
+  --font-num: "Google Sans", sans-serif;
+  --font-head: "Trirong", "Thonburi", serif;
+  --radius-card: 22px;
   --radius-tag: 10px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0c1919; --surface: #132526;
-    --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
-    --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
-    --accent: #f0a062; --accent-ink: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
-    --brand: #59c9c9; --on-brand: #062628; --chip: #1a3132; --track: #132526;
-    --line: #24403f; --line-soft: #1a3132;
-    --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
-    --scrim: rgba(0, 0, 0, 0.5);
-    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --bg: #121814; --surface: #1b231e;
+    --ink: #e4ebe5; --ink-muted: #a5b3a9; --ink-faint: #74827a;
+    --primary: #7cc29c; --primary-dark: #9fd6b7; --primary-light: #20372a;
+    --accent: #f08a5d; --accent-ink: #f4a57e; --accent-light: #3a2218; --danger: #f08a80;
+    --sub-bg: #3a3015; --sub-ink: #f0d27a;
+    --brand: #7cc29c; --on-brand: #10261a; --chip: #232d27; --track: #232d27;
+    --line: #46544a; --line-soft: #2c3730;
+    --nav-bg: #e4ebe5; --nav-ink: #3b4840;
+    --scrim: rgba(0, 0, 0, 0.55);
     --shadow-nav: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
     --c-meat: #e07b71; --c-sea: #6cbccd; --c-dairy: #7fa9db; --c-tofu: #c9b067; --c-veg: #6fb38f;
     --c-herb: #93c06b; --c-fruit: #dd9cc8; --c-grain: #cba076; --c-season: #d6ad62; --c-other: #98a89e;
@@ -83,15 +87,15 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0c1919; --surface: #132526;
-  --ink: #a9e2e2; --ink-muted: #72adb1; --ink-faint: #4b7a7d;
-  --primary: #59c9c9; --primary-dark: #7fd6d6; --primary-light: #1c3e3d;
-  --accent: #f0a062; --accent-ink: #f0a062; --accent-light: #3a2717; --danger: #ef7b7b;
-    --brand: #59c9c9; --on-brand: #062628; --chip: #1a3132; --track: #132526;
-  --line: #24403f; --line-soft: #1a3132;
-  --glass: rgba(19, 37, 38, 0.74); --glass-edge: rgba(120, 180, 182, 0.18);
-  --scrim: rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --bg: #121814; --surface: #1b231e;
+  --ink: #e4ebe5; --ink-muted: #a5b3a9; --ink-faint: #74827a;
+  --primary: #7cc29c; --primary-dark: #9fd6b7; --primary-light: #20372a;
+  --accent: #f08a5d; --accent-ink: #f4a57e; --accent-light: #3a2218; --danger: #f08a80;
+  --sub-bg: #3a3015; --sub-ink: #f0d27a;
+  --brand: #7cc29c; --on-brand: #10261a; --chip: #232d27; --track: #232d27;
+  --line: #46544a; --line-soft: #2c3730;
+  --nav-bg: #e4ebe5; --nav-ink: #3b4840;
+  --scrim: rgba(0, 0, 0, 0.55);
   --shadow-nav: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
   --c-meat: #e07b71; --c-sea: #6cbccd; --c-dairy: #7fa9db; --c-tofu: #c9b067; --c-veg: #6fb38f;
   --c-herb: #93c06b; --c-fruit: #dd9cc8; --c-grain: #cba076; --c-season: #d6ad62; --c-other: #98a89e;
@@ -125,12 +129,12 @@ button { font: inherit; color: inherit; }
 
 /* Header */
 .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; text-wrap: balance; }
-.head h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.head h1 { margin: 0; font-family: var(--font-head); font-size: 28px; font-weight: 600; line-height: 1.35; text-wrap: balance; }
+.head h1 .num { font-family: var(--font-head); font-style: italic; }
 .head .sub { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--ink-muted); }
 .sync {
   width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
-  border: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-card);
+  border: 0; border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink); cursor: pointer;
   transition: transform 140ms var(--ease-out);
 }
@@ -160,54 +164,52 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--shadow-card);
 }
 
-/* Hero: the one colourful card — the quickest menu that is ready now, with a ring of ready / all menus.
-   The gradient stops at #1b8088 (not #59c9c9) so white text passes contrast across the whole card. */
+/* Hero: the one green card — the quickest menu that is ready now, with a ring of ready / all menus. Flat, no decoration. */
 .hero {
-  position: relative; overflow: hidden; display: block; width: 100%;
-  padding: 20px; border: 0; border-radius: 28px; color: #fff; text-align: left; cursor: pointer;
-  background: linear-gradient(125deg, #0b4f55 0%, #10666d 55%, #1b8088 100%);
+  position: relative; display: block; width: 100%;
+  padding: 20px; border: 0; border-radius: var(--radius-card); color: var(--on-brand); text-align: left; cursor: pointer;
+  background: var(--brand);
   transition: transform 140ms var(--ease-out);
 }
 .hero:active { transform: scale(0.985); }
 .hero.static { cursor: default; }
 .hero.static:active { transform: none; }
-.hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
-.hero::before { right: -50px; bottom: -70px; width: 190px; height: 190px; background: rgba(255, 255, 255, 0.07); }
-.hero::after { right: 40px; bottom: -90px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.05); }
-.hero > * { position: relative; }
 .hero .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .hero .txt { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .hero .kicker {
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 10px;
-  border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-size: 12px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px;
+  border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-brand) 55%, transparent); font-size: 12px; font-weight: 600;
 }
 .hero .kicker svg { width: 14px; height: 14px; }
-.hero .title { margin-top: 14px; font-size: 24px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
-.hero .meta { margin-top: 4px; font-size: 13px; }
+.hero .title { margin-top: 12px; font-family: var(--font-head); font-size: 28px; line-height: 1.35; font-weight: 600; text-wrap: balance; }
+.hero .meta { margin-top: 2px; font-size: 13px; }
 .hero .ring { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; white-space: nowrap; }
 .hero .ring .rw { position: relative; width: 64px; height: 64px; }
 .hero .ring svg { display: block; width: 64px; height: 64px; transform: rotate(-90deg); }
-.hero .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.hero .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-head); font-style: italic; font-size: 24px; font-weight: 600; }
 .hero .cta {
-  margin-top: 18px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px 0 20px;
-  border-radius: 999px; background: #fff; color: #0b3d42; font-size: 15px; font-weight: 600;
+  margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px 0 20px;
+  border-radius: 999px; background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 600;
 }
 .hero .cta svg { width: 16px; height: 16px; }
 /* Pantry version: one row — how many picked, and a button over to the menus */
-.hero.summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 16px 20px; border-radius: var(--radius-card); }
-.hero.summary::before { top: -60px; bottom: auto; right: -40px; width: 150px; height: 150px; }
-.hero.summary::after { display: none; }
+.hero.summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 16px 20px; }
 .hero.summary .title, .hero.summary .meta { margin-top: 0; }
+.hero.summary .title { font-size: 24px; }
+.hero.summary .title .num { font-family: var(--font-head); font-style: italic; }
 .hero.summary .cta { margin-top: 0; flex-shrink: 0; }
 
-/* Segmented switch: ทำได้เลย / ขาดอีกนิด */
-.seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--track); }
+/* Tabs with counts: ทำได้เลย / ขาดอีกนิด / ทั้งหมด — underline, big italic serif numbers */
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); }
 .seg button {
-  flex: 1; min-width: 0; min-height: 44px; padding: 0 6px; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
-  border: 0; border-radius: 999px; background: transparent; color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+  position: relative; min-width: 0; min-height: 60px; padding: 0 2px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; white-space: nowrap;
+  border: 0; background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 500; cursor: pointer;
 }
-.seg button[aria-pressed="true"] { background: var(--brand); color: var(--on-brand); }
+.seg button .n { font-family: var(--font-head); font-style: italic; font-size: 26px; font-weight: 600; line-height: 1; color: var(--ink-muted); }
+.seg button[aria-pressed="true"] { color: var(--ink); font-weight: 600; }
+.seg button[aria-pressed="true"] .n { color: var(--brand); }
+.seg button[aria-pressed="true"][data-tab="almost"] .n { color: var(--accent-ink); }
+.seg button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 14px; bottom: -1px; height: 2px; background: var(--ink); }
 .cnt {
   min-width: 24px; height: 22px; padding: 0 7px; box-sizing: border-box; display: inline-grid; place-items: center;
   border-radius: 999px; font-family: var(--font-num); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
@@ -215,7 +217,6 @@ button { font: inherit; color: inherit; }
 .cnt.ready { background: var(--primary-light); color: var(--primary-dark); }
 .cnt.almost { background: var(--accent-light); color: var(--accent-ink); }
 .cnt:not(.ready):not(.almost) { background: var(--line-soft); color: var(--ink-muted); }
-.seg button[aria-pressed="true"] .cnt { background: color-mix(in srgb, var(--on-brand) 20%, transparent); color: inherit; }
 
 /* View container */
 .view { display: flex; flex-direction: column; gap: 16px; }
@@ -228,7 +229,7 @@ button { font: inherit; color: inherit; }
 .search {
   display: flex; align-items: center; gap: 8px;
   padding: 0 16px; height: 46px; border-radius: 999px;
-  background: var(--surface); border: 1.5px solid transparent; box-shadow: var(--shadow-card);
+  background: var(--surface); border: 1.5px solid var(--line-soft);
 }
 .search svg { width: 18px; height: 18px; color: var(--ink-faint); flex-shrink: 0; }
 .search input {
@@ -236,7 +237,7 @@ button { font: inherit; color: inherit; }
   font: inherit; color: var(--ink);
 }
 .search input::placeholder { color: var(--ink-faint); }
-.search:focus-within { border-color: var(--primary); }
+.search:focus-within { border-color: var(--brand); }
 
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .picked { font-size: 13px; color: var(--ink-muted); }
@@ -298,7 +299,7 @@ button { font: inherit; color: inherit; }
 .sheet.add { height: 88%; background: var(--bg); }
 .add-head { flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 6px 20px 12px; }
 .add-head .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.add-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.add-head h2 { margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 600; }
 .add-head .link-btn { min-height: 44px; font-size: 14px; }
 .sheet.add .scroll { flex: 1; min-height: 0; padding-top: 0; padding-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
 .asec { flex-shrink: 0; overflow: hidden; border-radius: 20px; background: var(--surface); box-shadow: var(--shadow-card); }
@@ -349,12 +350,12 @@ button { font: inherit; color: inherit; }
 .filters::-webkit-scrollbar { display: none; }
 .filter {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
-  min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0;
-  background: var(--surface); box-shadow: var(--shadow-card);
+  min-height: 40px; padding: 0 16px; border-radius: 999px; border: 0;
+  background: transparent; box-shadow: inset 0 0 0 1px var(--line);
   font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap;
 }
 .filter .cdot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
-.filter[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.filter[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; box-shadow: none; }
 
 /* Menu sections */
 .section-head { display: flex; align-items: center; gap: 8px; margin: 6px 4px -6px; }
@@ -366,27 +367,38 @@ button { font: inherit; color: inherit; }
 .section-head.ready .count { background: var(--primary-light); color: var(--primary-dark); }
 .section-head.almost .count { background: var(--accent-light); color: var(--accent-ink); }
 
-/* Menu rows: one grouped card per section, hairline dividers inset past the badge */
+/* Chapter divider above a list: hairline — ◆ label ◆ — hairline */
+.chapter { display: flex; align-items: center; gap: 10px; margin: 2px 0 -6px; font-family: var(--font-head); font-style: italic; font-size: 15px; font-weight: 500; color: var(--ink-muted); }
+.chapter::before, .chapter::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.chapter i { width: 6px; height: 6px; transform: rotate(45deg); background: var(--brand); flex-shrink: 0; }
+
+/* Menu rows: one grouped card, each row = open button (ring · name · meta) + optional "+ ซื้อ" */
 .list { overflow: hidden; }
+.menu-row { position: relative; display: flex; align-items: center; padding-right: 12px; }
+.menu-row + .menu-row::before {
+  content: ""; position: absolute; top: 0; left: 74px; right: 0; height: 1px; background: var(--line-soft);
+}
 .menu-card {
-  position: relative;
-  display: flex; align-items: center; gap: 14px; width: 100%;
-  min-height: 76px; padding: 14px 16px; border: 0; background: transparent;
+  position: relative; flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 14px;
+  min-height: 76px; padding: 14px 4px 14px 16px; border: 0; background: transparent;
   text-align: left; cursor: pointer;
   transition: background-color 140ms var(--ease-out);
 }
-.menu-card + .menu-card::before {
-  content: ""; position: absolute; top: 0; left: 74px; right: 0; height: 1px; background: var(--line-soft);
-}
 .menu-card:active { background: var(--line-soft); }
-.menu-card .badge {
-  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
-  display: grid; place-items: center;
-  font-family: var(--font-num); font-weight: 600; font-size: 16px;
+.menu-card .ring { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.menu-card .ring svg { display: block; width: 44px; height: 44px; transform: rotate(-90deg); }
+.menu-card .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-num); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.menu-row.ready .ring b { color: var(--brand); }
+.menu-row.almost .ring b { color: var(--accent-ink); }
+.menu-row.far .ring b { color: var(--ink-muted); }
+.stamp { display: inline-block; padding: 0 6px; border: 1px solid var(--ink); border-radius: 3px; font-size: 11px; font-weight: 600; line-height: 18px; color: var(--ink); }
+.add-mini {
+  flex-shrink: 0; min-height: 40px; padding: 0 12px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--accent-light); color: var(--accent-ink); font-size: 12px; font-weight: 600; white-space: nowrap;
 }
-.menu-card.ready .badge { background: var(--primary-light); color: var(--primary-dark); }
-.menu-card.almost .badge { background: var(--accent-light); color: var(--accent-ink); }
-.menu-card.ready .badge svg { width: 20px; height: 20px; }
+.add-mini[aria-pressed="true"] { background: var(--chip); color: var(--ink-muted); }
+.add-mini:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .menu-card .body { flex: 1; min-width: 0; }
 .menu-card .body { display: flex; flex-direction: column; }
 .menu-card .name { font-weight: 600; font-size: 16px; line-height: 1.35; }
@@ -410,8 +422,8 @@ button { font: inherit; color: inherit; }
   display: grid; place-items: center; background: var(--track); color: var(--brand);
 }
 .empty .art svg { width: 64px; height: 64px; }
-.empty h3 { margin: 0; font-size: 16px; font-weight: 600; }
-.empty.big h3 { font-size: 20px; font-weight: 700; }
+.empty h3 { margin: 0; font-family: var(--font-head); font-size: 19px; font-weight: 600; }
+.empty.big h3 { font-size: 24px; }
 .empty p { margin: 0; font-size: 14px; color: var(--ink-muted); max-width: 32ch; }
 .empty button {
   margin-top: 6px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px;
@@ -419,11 +431,17 @@ button { font: inherit; color: inherit; }
 }
 .foot { margin: 0 8px; text-align: center; font-size: 13px; color: var(--ink-muted); }
 /* Far-away menus (search only), shopping list, "buy to unlock" */
-.menu-card.far .badge { background: var(--line-soft); color: var(--ink-muted); }
 .section-head.far .count { background: var(--line-soft); color: var(--ink-muted); }
 .tool { padding: 14px 16px 6px; display: flex; flex-direction: column; }
+.tool.unlock { background: var(--accent-light); box-shadow: none; }
+.tool.unlock .tool-head h2, .tool.unlock .tool-row .t b { color: var(--ink); }
+.tool.unlock .tool-sub, .tool.unlock .tool-row .t small { color: var(--accent-ink); }
+.tool.unlock .tool-row { border-top-color: color-mix(in srgb, var(--accent-ink) 18%, transparent); }
+.tool.unlock .pill-btn { background: var(--accent-ink); color: var(--surface); }
+.tool.unlock .pill-btn.ghost { background: var(--surface); color: var(--accent-ink); }
+.tool-row .gain { flex-shrink: 0; padding: 2px 8px; border-radius: 8px; background: var(--accent-light); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
 .tool-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.tool-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+.tool-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-head); font-size: 19px; font-weight: 600; }
 .tool-sub { margin: 2px 0 8px; font-size: 13px; color: var(--ink-muted); }
 .tool-row {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0;
@@ -436,8 +454,8 @@ button { font: inherit; color: inherit; }
 .tool-row .t small { display: block; margin-top: 1px; font-size: 13px; line-height: 1.5; color: var(--ink-muted); }
 .tool-row { min-height: 56px; }
 .tool-row.shop { cursor: pointer; }
-.tool-row.shop .box { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-faint); flex-shrink: 0; }
-.tool-row.shop:active .box { background: var(--primary-light); border-color: var(--primary-dark); }
+.tool-row.shop .box { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); flex-shrink: 0; }
+.tool-row.shop:active .box { background: var(--brand); border-color: var(--brand); }
 .pill-btn {
   flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; cursor: pointer;
@@ -451,35 +469,45 @@ button { font: inherit; color: inherit; }
 .skeleton { height: 64px; border-radius: var(--radius-card); background: var(--line-soft); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
 
-/* Floating nav capsule */
+/* Floating nav capsule: dark, the current page is a cream pill */
 .nav {
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  display: flex; gap: 4px; padding: 5px; border-radius: 999px;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--glass-edge);
+  display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+  background: var(--nav-bg);
   box-shadow: var(--shadow-nav);
   z-index: 20;
 }
-@media (prefers-reduced-transparency: reduce) {
-  .nav { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: var(--line); }
-}
 .nav button {
-  display: flex; align-items: center; gap: 6px;
-  min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: transparent;
-  font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; white-space: nowrap;
+  position: relative; display: flex; align-items: center; gap: 6px;
+  min-height: 48px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent;
+  font-size: 14px; font-weight: 500; color: var(--nav-ink); cursor: pointer; white-space: nowrap;
   transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }
 .nav button svg { width: 20px; height: 20px; }
-.nav button[aria-current="page"] { background: var(--brand); color: var(--on-brand); }
+.nav button[aria-current="page"] { background: var(--bg); color: var(--ink); font-weight: 700; }
+.nav button[aria-current="page"] svg { color: var(--brand); }
 .nav .pill {
-  min-width: 24px; padding: 0 7px; height: 22px; box-sizing: border-box; border-radius: 999px;
-  display: grid; place-items: center; font-family: var(--font-num); font-size: 12px; font-weight: 600;
-  background: var(--primary-light); color: var(--primary-dark);
+  min-width: 22px; padding: 0 6px; height: 20px; box-sizing: border-box; border-radius: 999px;
+  display: grid; place-items: center; font-family: var(--font-num); font-size: 11px; font-weight: 700;
+  background: color-mix(in srgb, var(--nav-ink) 22%, transparent); color: inherit;
 }
-.nav button[aria-current="page"] .pill { background: color-mix(in srgb, var(--on-brand) 20%, transparent); color: inherit; }
+.nav button[aria-current="page"] .pill { background: var(--primary-light); color: var(--primary-dark); }
+.nav .pill.alert { background: var(--accent); color: #fff; }
+.nav .pill:empty { display: none; }
+/* only the current page shows its word; the others keep it for screen readers */
+.nav button:not([aria-current="page"]) .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Undo toast (pantry ×) */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 21;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 32px), 420px); display: flex; align-items: center; gap: 10px;
+  padding: 8px 8px 8px 16px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 14px;
+}
+.toast[hidden] { display: none; }
+.toast span { flex: 1; min-width: 0; }
+.toast button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--bg) 18%, transparent); color: inherit; font-weight: 600; cursor: pointer; }
 
 /* Detail sheet */
 .scrim {
@@ -504,37 +532,54 @@ button { font: inherit; color: inherit; }
   padding-block: 12px calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex; flex-direction: column; gap: 18px;
 }
-.sheet h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
-.sheet .status { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-.sheet .status.ready { background: var(--primary-light); color: var(--primary-dark); }
-.sheet .status.almost, .sheet .status.far { background: var(--accent-light); color: var(--accent-ink); }
-.sheet .facts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-radius: 16px; background: var(--line-soft); }
-.sheet .fact { padding: 10px 14px; min-width: 0; }
-.sheet .fact + .fact { border-left: 1px solid var(--line); }
-.sheet .fact small { display: block; font-size: 11.5px; color: var(--ink-muted); }
-.sheet .fact b { display: block; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sheet h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.sheet#sheet { background: var(--bg); }
+.sheet#sheet .grab { position: absolute; left: 0; right: 0; top: 0; z-index: 1; background: color-mix(in srgb, var(--on-brand) 45%, transparent); }
+/* Recipe header: flat green block, serif title, three-slot facts bar */
+.dhead {
+  margin: -12px calc(-1 * max(20px, env(safe-area-inset-left, 0px))) 0;
+  padding: 26px max(20px, env(safe-area-inset-left, 0px)) 18px;
+  background: var(--brand); color: var(--on-brand); border-radius: 24px 24px 24px 24px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.dhead .folio { font-family: var(--font-head); font-style: italic; font-size: 14px; opacity: 0.85; }
+.sheet h2 { margin: 0; font-family: var(--font-head); font-size: 30px; font-weight: 600; line-height: 1.35; text-wrap: balance; }
+.sheet .status { align-self: flex-start; display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--bg); }
+.sheet .status.ready { color: var(--brand); }
+.sheet .status.almost, .sheet .status.far { color: var(--accent-ink); }
+.sheet .facts { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin-top: 4px; border-top: 1px solid color-mix(in srgb, var(--on-brand) 40%, transparent); }
+.sheet .fact { padding: 10px 0 0 12px; min-width: 0; }
+.sheet .fact:first-child { padding-left: 0; }
+.sheet .fact + .fact { border-left: 1px solid color-mix(in srgb, var(--on-brand) 40%, transparent); }
+.sheet .fact small { display: block; font-size: 11.5px; opacity: 0.85; }
+.sheet .fact b { display: block; font-family: var(--font-head); font-style: italic; font-size: 19px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet .fact b .num { font-family: inherit; }
+.sheet h3 { margin: 0 0 8px; display: flex; align-items: baseline; justify-content: space-between; font-family: var(--font-head); font-size: 19px; font-weight: 600; color: var(--ink); }
+.sheet h3 small { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+/* Ingredients like a cookbook: status box · name ········ amount */
 .ing-list { list-style: none; margin: 0; padding: 0; }
 .ing-list li:last-child { border-bottom: 0; }
 .ing-list li {
-  display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start;
-  padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+  display: flex; gap: 10px; align-items: center;
+  min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--line-soft);
 }
-.ing-list .st { width: 18px; height: 18px; margin-top: 2px; }
-.ing-list .have .st { color: var(--primary-dark); }
-.ing-list .miss .st { color: var(--accent-ink); }
-.ing-list .skip .st, .ing-list .skip .n { color: var(--ink-faint); }
-.ing-list .n { min-width: 0; }
+.ing-list .st { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; border-radius: 8px; }
+.ing-list .st svg { width: 14px; height: 14px; }
+.ing-list .have .st { background: var(--brand); color: var(--on-brand); }
+.ing-list .swap .st { background: var(--sub-bg); color: var(--sub-ink); }
+.ing-list .miss .st { background: var(--accent-light); color: var(--accent-ink); }
+.ing-list .skip .st { background: var(--chip); color: var(--ink-muted); }
+.ing-list .skip .n { color: var(--ink-muted); }
+.ing-list .n { flex: 0 1 auto; min-width: 0; max-width: 60%; }
+.ing-list .ld { flex: 1; min-width: 16px; height: 0; margin-top: 6px; border-bottom: 2px dotted var(--line); }
 .ing-list .sub { display: block; font-size: 12px; color: var(--ink-muted); }
+.ing-list .swap .sub { color: var(--sub-ink); font-weight: 500; }
 .ing-list .miss .sub { color: var(--accent-ink); }
-.ing-list .q { font-family: var(--font-num); font-size: 13px; color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ing-list .q { font-family: var(--font-head); font-style: italic; font-size: 15px; font-weight: 500; color: var(--ink); white-space: nowrap; }
 .steps { margin: 0; white-space: pre-line; font-size: 15px; line-height: 1.7; }
-.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-.step-list li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; font-size: 15px; line-height: 1.7; }
-.step-list .no {
-  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
-  background: var(--primary-light); color: var(--primary-dark); font-family: var(--font-num); font-size: 14px; font-weight: 600;
-}
+.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.step-list li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 15px; line-height: 1.7; }
+.step-list li:last-child { border-bottom: 0; }
+.step-list .no { font-family: var(--font-head); font-style: italic; font-size: 30px; font-weight: 600; line-height: 1; color: var(--brand); }
 .src {
   display: inline-flex; align-items: center; gap: 6px; color: var(--primary-dark); font-weight: 600;
   text-decoration: none; word-break: break-all;
@@ -550,13 +595,9 @@ button { font: inherit; color: inherit; }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
   padding: 24px 16px; text-align: center; overflow: hidden;
 }
-.login::before, .login::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
-.login::before { left: -80px; top: -120px; width: 360px; height: 360px; background: var(--primary-light); }
-.login::after { right: -90px; top: 120px; width: 220px; height: 220px; background: var(--track); }
-.login > * { position: relative; }
 .login[hidden] { display: none; }
-.login img { width: 96px; height: 96px; border-radius: 28px; box-shadow: 0 16px 32px -12px rgba(11, 79, 85, 0.5); }
-.login h2 { margin: 8px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.login img { width: 96px; height: 96px; border-radius: 28px; }
+.login h2 { margin: 8px 0 0; font-family: var(--font-head); font-size: 34px; font-weight: 600; line-height: 1.35; }
 .login p { margin: 0; max-width: 300px; font-size: 14px; color: var(--ink-muted); }
 .login #gbtn { min-height: 44px; margin-top: 6px; }
 
@@ -589,9 +630,12 @@ button { font: inherit; color: inherit; }
 </div>
 
 <nav class="nav" aria-label="สลับหน้า">
-  <button type="button" id="navPantry" data-view="pantry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5 10a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 9z"/><path d="M8 9l3-5M16 9l-3-5"/></svg>ของที่มี <span class="pill num" id="pillPantry">0</span></button>
-  <button type="button" id="navMenus" data-view="menus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5"/></svg>เมนู <span class="pill num" id="pillMenus">0</span></button>
+  <button type="button" id="navPantry" data-view="pantry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></svg><span class="lbl">ในครัว</span><span class="pill num" id="pillPantry">0</span></button>
+  <button type="button" id="navMenus" data-view="menus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h20M9 6.5c0-1 1-1.5 1-2.5M14 6.5c0-1 1-1.5 1-2.5"/></svg><span class="lbl">เมนู</span><span class="pill num" id="pillMenus">0</span></button>
+  <button type="button" id="navShop" data-view="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="lbl">ซื้อ</span><span class="pill num alert" id="pillShop"></span></button>
 </nav>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastUndo">เลิกทำ</button></div>
 
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
@@ -657,6 +701,7 @@ button { font: inherit; color: inherit; }
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>',
     emptyBowl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5" stroke-dasharray="1.6 1.6"/></svg>',
   };
   const ALL = "ทั้งหมด";
@@ -795,7 +840,7 @@ button { font: inherit; color: inherit; }
   const $ = (id) => document.getElementById(id);
   const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : null);
   function metaHtml(r) {
-    const bits = [`<span>${esc(r.cat)}</span>`];
+    const bits = [`<span class="stamp">${esc(r.cat)}</span>`];
     if (r.time != null) bits.push(`<span>${ICON.clock}<span class="num">${r.time}</span> นาที</span>`);
     if (r.serves != null) bits.push(`<span>${ICON.bowl}<span class="num">${r.serves}</span> ที่</span>`);
     return bits.join("");
@@ -809,32 +854,39 @@ button { font: inherit; color: inherit; }
     const ready = results.filter((x) => x.level === "ready");
     const almost = results.filter((x) => x.level === "almost");
 
+    const shopCount = m ? shoppingList(results).size : 0;
     $("headTitle").textContent = !m ? "วันนี้ทำอะไรกิน"
-      : state.view === "pantry" ? "ของที่มีในครัว"
+      : state.view === "pantry" ? "ของในครัว"
+      : state.view === "shop" ? "รายการซื้อ"
       : state.menuSearch.trim() ? "ค้นหาเมนู"
-      : state.menuTab === "all" ? `สูตรทั้งหมด ${m.recipes.length} เมนู`
+      : state.menuTab === "all" ? "สูตรทั้งหมด"
       : !state.selected.size && !state.plan.size ? "วันนี้ทำอะไรกิน"
-      : state.menuTab === "almost" ? `ขาดอีกนิด ${almost.length} เมนู`
-      : `มื้อนี้ทำได้เลย ${ready.length} เมนู`;
+      : state.menuTab === "almost" ? "ขาดอีกนิด"
+      : "เย็นนี้ทำอะไรดี";
     $("pillPantry").textContent = state.selected.size;
     $("pillMenus").textContent = m ? ready.length : 0;
+    $("pillShop").textContent = shopCount || "";
 
     renderNotice();
     renderSync();
 
+    const VIEWS = ["pantry", "menus", "shop"];
     $("navPantry").setAttribute("aria-current", state.view === "pantry" ? "page" : "false");
     $("navMenus").setAttribute("aria-current", state.view === "menus" ? "page" : "false");
+    $("navShop").setAttribute("aria-current", state.view === "shop" ? "page" : "false");
 
     const view = $("view");
     if (lastView !== state.view) {
       view.classList.remove("from-left", "from-right");
       void view.offsetWidth;
-      view.classList.add(state.view === "menus" ? "from-right" : "from-left");
+      view.classList.add(VIEWS.indexOf(state.view) > VIEWS.indexOf(lastView) ? "from-right" : "from-left");
       lastView = state.view;
     }
 
     if (!m) { view.innerHTML = loadingHtml(); return; }
-    view.innerHTML = state.view === "pantry" ? pantryHtml(m, ready) : menusHtml(m, ready, almost, results);
+    view.innerHTML = state.view === "pantry" ? pantryHtml(m, ready)
+      : state.view === "shop" ? shopViewHtml(results)
+      : menusHtml(m, ready, almost, results);
     if (state.view === "menus") {
       const mq = $("mq");
       if (mq) mq.addEventListener("input", (e) => {
@@ -921,19 +973,31 @@ button { font: inherit; color: inherit; }
     const card = (x) => {
       let extra = "";
       if (x.level === "almost") {
-        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}${state.plan.has(x.recipe.name) ? " · อยู่ในรายการซื้อ" : ""}</span>`;
+        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`;
       } else if (x.level === "far") {
         extra = `<span class="need">${x.items.length ? `ขาด ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>`;
       } else if (x.swaps.length) {
         extra = `<span class="swap">ใช้${x.swaps.map((i) => `${esc(i.usedSub)}แทน${esc(i.name)}`).join(", ")}</span>`;
       }
-      const badge = x.level === "ready" ? ICON.check : x.items.length ? `−${x.missing.length}` : "–";
-      return `<button type="button" class="menu-card ${x.level}" data-recipe="${esc(x.recipe.name)}">
-        <span class="badge" aria-hidden="true">${badge}</span>
+      // ring: must-have ingredients I have / need (optional ones that are skipped don't count)
+      const need = x.items.filter((i) => i.status !== "skip").length;
+      const have = need - x.missing.length;
+      const C = 113.1; // 2π × 18
+      const off = need ? (C * (1 - have / need)).toFixed(1) : C;
+      const color = x.level === "ready" ? "var(--brand)" : x.level === "almost" ? "var(--accent)" : "var(--ink-faint)";
+      const ring = `<span class="ring" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="var(--line-soft)" stroke-width="3"/><circle cx="22" cy="22" r="18" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg><b>${need ? `${have}/${need}` : "–"}</b></span>`;
+      // almost: one tap puts the menu on the shopping list without opening it
+      const inPlan = state.plan.has(x.recipe.name);
+      const add = x.level === "almost"
+        ? `<button type="button" class="add-mini" data-plan="${esc(x.recipe.name)}" aria-pressed="${inPlan}" aria-label="${inPlan ? "เอาออกจากรายการซื้อ" : "ใส่รายการซื้อ"}: ${esc(x.recipe.name)}">${inPlan ? "✓ ในรายการ" : "+ ซื้อ"}</button>`
+        : "";
+      return `<div class="menu-row ${x.level}"><button type="button" class="menu-card" data-recipe="${esc(x.recipe.name)}">
+        ${ring}
         <span class="body"><span class="name">${esc(x.recipe.name)}</span><span class="meta">${metaHtml(x.recipe)}</span>${extra}</span>
-        <span class="chev">${ICON.chev}</span>
-      </button>`;
+        ${add ? "" : `<span class="chev">${ICON.chev}</span>`}
+      </button>${add}</div>`;
     };
+    const chapter = (label) => `<p class="chapter"><i aria-hidden="true"></i>${label}<i aria-hidden="true"></i></p>`;
     const section = (cls, title, list) => list.length
       ? `<div class="section-head ${cls}"><h2>${title}</h2><span class="count num">${list.length}</span></div><div class="card list">${list.map(card).join("")}</div>`
       : "";
@@ -969,25 +1033,25 @@ button { font: inherit; color: inherit; }
       ? `<div class="filters" role="group" aria-label="กรองตามหมวด">${cats.map((c) => `<button type="button" class="filter" data-cat="${esc(c)}" aria-pressed="${c === state.cat}">${esc(c)}</button>`).join("")}</div>`
       : "";
     const seg = `<div class="seg" role="group" aria-label="สลับรายการเมนู">
-        <button type="button" data-tab="ready" aria-pressed="${tab === "ready"}">ทำได้เลย <span class="cnt ready">${ready.length}</span></button>
-        <button type="button" data-tab="almost" aria-pressed="${tab === "almost"}">ขาดอีกนิด <span class="cnt almost">${almost.length}</span></button>
-        <button type="button" data-tab="all" aria-pressed="${tab === "all"}">ทั้งหมด <span class="cnt">${m.recipes.length}</span></button>
+        <button type="button" data-tab="ready" aria-pressed="${tab === "ready"}"><span class="n num">${ready.length}</span>ทำได้เลย</button>
+        <button type="button" data-tab="almost" aria-pressed="${tab === "almost"}"><span class="n num">${almost.length}</span>ขาดอีกนิด</button>
+        <button type="button" data-tab="all" aria-pressed="${tab === "all"}"><span class="n num">${m.recipes.length}</span>ทั้งหมด</button>
       </div>`;
 
     if (tab === "all") {
-      return `${seg}${searchBox}${filters}<div class="card list">${list.map(card).join("")}</div>`;
+      return `${searchBox}${seg}${filters}${chapter("ทุกเมนู")}<div class="card list">${list.map(card).join("")}</div>`;
     }
 
     if (tab === "ready") {
       const listBlock = list.length
-        ? `<div class="card list">${list.map(card).join("")}</div>`
+        ? `${chapter("ทำได้เลย")}<div class="card list">${list.map(card).join("")}</div>`
         : ready.length ? "" : `<div class="card empty"><p>ยังไม่มีเมนูที่ของครบ${almost.length ? " ลองดูแท็บขาดอีกนิด" : ""}</p></div>`;
-      return `${heroHtml(m, ready, byTime)}${seg}${searchBox}${filters}${listBlock}`;
+      return `${searchBox}${seg}${heroHtml(m, ready, byTime)}${filters}${listBlock}`;
     }
     const listBlock = list.length
-      ? `<div class="card list">${list.map(card).join("")}</div>`
+      ? `${chapter("ขาดอีกนิด")}<div class="card list">${list.map(card).join("")}</div>`
       : `<div class="card empty"><p>ยังไม่มีเมนูที่ขาดแค่ 1–${ALMOST_MAX} อย่าง</p></div>`;
-    return `${seg}${unlockHtml(results)}${searchBox}${filters}${listBlock}${shopHtml(results)}`;
+    return `${searchBox}${seg}${filters}${unlockHtml(results)}${listBlock}`;
   }
 
   // the quickest ready menu, plus a ring of ready / all menus
@@ -995,7 +1059,7 @@ button { font: inherit; color: inherit; }
     const total = m.recipes.length;
     const C = 163.36; // 2π × 26
     const dash = total ? (C * ready.length) / total : 0;
-    const ring = `<span class="ring"><span class="rw"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,.22)" stroke-width="6"/>${dash ? `<circle cx="32" cy="32" r="26" stroke="#8ee3dd" stroke-width="6" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}"/>` : ""}</svg><b>${ready.length}</b></span><span>จาก <span class="num">${total}</span> เมนู</span></span>`;
+    const ring = `<span class="ring"><span class="rw"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="currentColor" stroke-opacity=".25" stroke-width="4"/>${dash ? `<circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="${dash.toFixed(1)} ${C}"/>` : ""}</svg><b>${ready.length}</b></span><span>จาก <span class="num">${total}</span> เมนู</span></span>`;
     const top = [...ready].sort(byTime)[0];
     if (!top) {
       return `<div class="hero static"><span class="top"><span class="txt"><span class="title">ยังไม่มีเมนูที่ของครบ</span><span class="meta">ลองดูแท็บขาดอีกนิด หรือติ๊กของเพิ่ม</span></span>${ring}</span></div>`;
@@ -1012,19 +1076,28 @@ button { font: inherit; color: inherit; }
       </button>`;
   }
 
-  // menus the user put on the shopping list → what is still missing, tap an item once it is bought
-  function shopHtml(results) {
-    if (!state.plan.size) return "";
+  // ซื้อ page: menus the user put on the shopping list → what is still missing, most menus first;
+  // tapping an item = bought, it moves into the kitchen (state.selected) and drops off the list
+  function shopViewHtml(results) {
     const list = shoppingList(results);
-    const rows = [...list].map(([name, uses]) => `<button type="button" class="tool-row shop" data-bought="${esc(name)}">
+    if (!state.plan.size) {
+      return `<div class="card empty big"><span class="art" aria-hidden="true">${ICON.emptyBowl}</span><h3>ยังไม่มีอะไรต้องซื้อ</h3><p>กด + ซื้อ ที่เมนูในแท็บขาดอีกนิด แล้วของที่ขาดจะมาอยู่ที่นี่</p><button type="button" data-goto="menus" data-tabgo="almost">ไปดูเมนูที่ขาดอีกนิด</button></div>`;
+    }
+    const rows = [...list]
+      .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "th"))
+      .map(([name, uses]) => `<button type="button" class="tool-row shop" data-bought="${esc(name)}">
         <span class="box" aria-hidden="true"></span>
         <span class="t"><b>${esc(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
+        <span class="gain num">${uses.length} เมนู</span>
       </button>`).join("");
+    const menus = [...state.plan].sort((a, b) => a.localeCompare(b, "th"));
     return `<section class="card tool">
-      <div class="tool-head"><h2>รายการซื้อ${list.size ? ` <span class="cnt ready">${list.size}</span>` : ""}</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
-      <p class="tool-sub">${rows ? "ซื้อแล้วแตะที่ชื่อ ของจะถูกนับว่ามีในครัว" : "ของครบทุกเมนูในรายการแล้ว"}</p>
+      <div class="tool-head"><h2>ต้องซื้อ${list.size ? ` <span class="cnt almost">${list.size}</span>` : ""}</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
+      <p class="tool-sub">${rows ? "ซื้อแล้วแตะที่ชื่อ ของจะย้ายเข้าครัวให้เลย" : "ของครบทุกเมนูในรายการแล้ว ไปทำได้เลย"}</p>
       ${rows}
-    </section>`;
+    </section>
+    <p class="chapter"><i aria-hidden="true"></i>สำหรับเมนู<i aria-hidden="true"></i></p>
+    <div class="card list">${menus.map((n) => `<div class="menu-row"><button type="button" class="menu-card" data-recipe="${esc(n)}"><span class="body"><span class="name">${esc(n)}</span></span><span class="chev">${ICON.chev}</span></button><button type="button" class="add-mini" data-plan="${esc(n)}" aria-pressed="true" aria-label="เอาออกจากรายการซื้อ: ${esc(n)}">เอาออก</button></div>`).join("")}</div>`;
   }
 
   // one missing ingredient → the menus it completes; most menus first
@@ -1033,7 +1106,7 @@ button { font: inherit; color: inherit; }
       .sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], "th"))
       .slice(0, 5);
     if (!rows.length) return "";
-    return `<section class="card tool">
+    return `<section class="card tool unlock">
       <div class="tool-head"><h2>ซื้อเพิ่มอย่างเดียว ทำได้เลย</h2></div>
       <p class="tool-sub">ขาดอยู่ชิ้นเดียว ซื้อมาแล้วเมนูจะครบ</p>
       ${rows.map(([name, ms]) => {
@@ -1083,22 +1156,28 @@ button { font: inherit; color: inherit; }
       else if (i.status === "skip") sub = "ไม่ใส่ก็ได้";
       else if (i.optional) sub = "ไม่ใส่ก็ได้";
       const q = [i.qty, i.unit].filter(Boolean).join(" ");
-      return `<li class="${i.status}"><span class="st">${icon}</span><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="q">${esc(q)}</span></li>`;
+      const cls = i.usedSub ? "have swap" : i.status;
+      const st = i.usedSub ? ICON.swap : icon;
+      return `<li class="${cls}"><span class="st" aria-hidden="true">${st}</span><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q)}</span></li>`;
     };
     const url = safeUrl(r.link);
+    const m = model();
+    const idx = m ? m.recipes.findIndex((y) => y.name === r.name) + 1 : 0;
+    const steps = r.steps ? r.steps.split(/\n+/).filter((s) => s.trim()).length : 0;
     $("sheetBody").innerHTML = `
-      <div>
+      <div class="dhead">
+        ${idx ? `<span class="folio">สูตรที่ <span class="num">${idx}</span> จาก <span class="num">${m.recipes.length}</span></span>` : ""}
         <h2 id="sheetTitle">${esc(r.name)}</h2>
         <span class="status ${x.level}">${x.level === "ready" ? "ของครบ ทำได้เลย" : x.items.length ? `ขาดอีก ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>
+        <div class="facts">
+          ${r.time != null ? `<div class="fact"><small>เวลา</small><b><span class="num">${r.time}</span> นาที</b></div>` : ""}
+          ${r.serves != null ? `<div class="fact"><small>จำนวน</small><b><span class="num">${r.serves}</span> ที่</b></div>` : ""}
+          <div class="fact"><small>หมวด</small><b>${esc(r.cat)}</b></div>
+        </div>
       </div>
-      <div class="facts">
-        <div class="fact"><small>หมวด</small><b>${esc(r.cat)}</b></div>
-        ${r.time != null ? `<div class="fact"><small>เวลา</small><b><span class="num">${r.time}</span> นาที</b></div>` : ""}
-        ${r.serves != null ? `<div class="fact"><small>จำนวน</small><b><span class="num">${r.serves}</span> ที่</b></div>` : ""}
-      </div>
-      ${x.items.length ? `<section><h3>วัตถุดิบ</h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
+      ${x.items.length ? `<section><h3>วัตถุดิบ<small>${x.level === "ready" ? "มีครบ" : `ขาด ${x.missing.length} อย่าง`}</small></h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
       ${x.level !== "ready" && x.missing.length ? `<button type="button" class="pill-btn wide ${state.plan.has(r.name) ? "ghost" : ""}" data-plan="${esc(r.name)}">${state.plan.has(r.name) ? "เอาออกจากรายการซื้อของ" : "ใส่รายการซื้อของ"}</button>` : ""}
-      ${r.steps ? `<section><h3>ขั้นตอน</h3>${stepsHtml(r.steps)}</section>` : ""}
+      ${r.steps ? `<section><h3>วิธีทำ${steps > 1 ? `<small>${steps} ขั้น</small>` : ""}</h3>${stepsHtml(r.steps)}</section>` : ""}
       ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
       ${url ? `<section><h3>สูตรต้นทาง</h3><a class="src" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ICON.link}${esc(url)}</a></section>` : ""}
       ${r.note ? `<section><h3>หมายเหตุ</h3><p class="note">${esc(r.note)}</p></section>` : ""}`;
@@ -1195,6 +1274,17 @@ button { font: inherit; color: inherit; }
     render();
   }
 
+  // ---------- undo toast (pantry ×) ----------
+  let lastRemoved = null, toastTimer = null;
+  function showUndo(name) {
+    lastRemoved = name;
+    $("toastText").textContent = `เอา ${name} ออกแล้ว`;
+    $("toast").hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideUndo, 5000);
+  }
+  function hideUndo() { lastRemoved = null; clearTimeout(toastTimer); $("toast").hidden = true; }
+
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     const t = e.target.closest("button, .scrim");
@@ -1215,10 +1305,16 @@ button { font: inherit; color: inherit; }
       if (hit) hit[1].forEach((n) => { if (!state.selected.has(n)) state.pending.add(n); });
       return renderAdd(m);
     }
-    if (t.dataset.rm) { state.selected.delete(t.dataset.rm); saveSelected(); return render(); }
+    if (t.dataset.rm) { state.selected.delete(t.dataset.rm); saveSelected(); showUndo(t.dataset.rm); return render(); }
+    if (t.id === "toastUndo") {
+      if (lastRemoved) { state.selected.add(lastRemoved); saveSelected(); }
+      hideUndo();
+      return render();
+    }
     if (t.dataset.qadd) { state.selected.add(t.dataset.qadd); bumpFreq([t.dataset.qadd]); saveSelected(); return render(); }
     if (t.dataset.view || t.dataset.goto) {
       state.view = t.dataset.view || t.dataset.goto;
+      if (t.dataset.tabgo) { state.menuTab = t.dataset.tabgo; state.cat = ALL; }
       window.scrollTo({ top: 0 });
       return render();
     }
