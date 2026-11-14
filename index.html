@@ -588,6 +588,78 @@ button { font: inherit; color: inherit; }
 .note { margin: 0; font-size: 14px; color: var(--ink-muted); }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag { padding: 3px 11px; border-radius: 999px; background: var(--line-soft); font-size: 12px; color: var(--ink-muted); }
+/* Status box in the ingredient list = toggle "มีในครัว" (44px tap area around the 24px box) */
+.ing-list button.st { position: relative; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; }
+.ing-list button.st::after { content: ""; position: absolute; inset: -10px; }
+.ing-list button.st:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.dtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dedit {
+  min-height: 36px; padding: 0 14px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+  background: transparent; color: var(--on-brand); border: 1px solid color-mix(in srgb, var(--on-brand) 55%, transparent);
+}
+.dedit:focus-visible { outline: 2px solid var(--on-brand); outline-offset: 2px; }
+/* Recipe editor: the recipe page itself becomes editable — tap a thing to edit just that thing */
+.ehdr { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
+.ehdr p { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.sheet input:not([type="checkbox"]), .sheet select, .sheet textarea {
+  width: 100%; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; font-weight: 400;
+}
+.sheet textarea { resize: vertical; line-height: 1.6; }
+.sheet input:focus-visible, .sheet select:focus-visible, .sheet textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 0; border-color: transparent; }
+.dhead.editing { background: color-mix(in srgb, var(--brand) 88%, var(--ink)); }
+.ename-btn, .fact.ed { border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ename-btn { padding: 0; align-self: flex-start; max-width: 100%; }
+.ename-btn h2, .fact.ed b { text-decoration: underline dashed color-mix(in srgb, var(--on-brand) 55%, transparent); text-decoration-thickness: 1px; text-underline-offset: 6px; }
+.ename-btn:focus-visible, .fact.ed:focus-visible { outline: 2px solid var(--on-brand); outline-offset: 2px; border-radius: 8px; }
+.dhead input.ename { font-family: var(--font-head); font-size: 24px; font-weight: 600; }
+.fact.on { padding-bottom: 2px; }
+.fact.on input, .fact.on select { min-height: 40px; margin-top: 4px; padding: 4px 8px; font-size: 16px; }
+.ing-list.editing li { gap: 6px; }
+.ing-list .ebtn { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center; min-height: 44px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ing-list .ebtn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+.ing-list .erow.open { border-bottom: 0; }
+.ing-list .erow.open .n { font-weight: 600; }
+.ing-list .changed .sub { color: var(--brand); font-weight: 500; }
+.ing-list li.gone .n { color: var(--ink-faint); text-decoration: line-through; }
+.ing-list li.gone .sub { color: var(--accent-ink); text-decoration: none; display: block; }
+.ing-list li.gone .link-btn { min-height: 44px; font-size: 14px; }
+.ex { width: 44px; height: 44px; margin-right: -10px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 999px; background: transparent; color: var(--ink-faint); cursor: pointer; }
+.ex svg { width: 15px; height: 15px; }
+.ing-list li.epanel { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 4px 0 14px; }
+.ing-list li.epanel .link-btn { align-self: flex-end; min-height: 40px; font-size: 14px; }
+.epair { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; }
+.echeck { display: flex; align-items: center; gap: 8px; min-height: 40px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.echeck input { width: 20px; height: 20px; accent-color: var(--brand); }
+.esub { display: flex; align-items: center; gap: 10px; }
+.esub span { flex-shrink: 0; font-size: 14px; color: var(--ink-muted); }
+.ing-list li.eaddrow { border-bottom: 0; padding-top: 4px; }
+.eadd-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px dashed var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.eadd-btn svg { width: 14px; height: 14px; }
+.eadd { display: flex; gap: 8px; width: 100%; }
+.link-btn.sm { min-height: 36px; padding: 0 4px; font-family: var(--font-body); font-size: 14px; }
+.ehint { margin: 6px 4px 0; font-size: 12px; color: var(--ink-faint); }
+.eerr { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--accent-light); color: var(--accent-ink); font-size: 14px; }
+.eerr .link-btn { color: inherit; text-decoration: underline; }
+.ebar { display: flex; align-items: center; gap: 10px; position: sticky; bottom: 0; margin-top: auto; padding: 8px 8px 8px 18px; border-radius: 999px; background: var(--ink); color: var(--bg); box-shadow: var(--shadow-nav); }
+.ebar[hidden] { display: none; }
+.ebar .ecount { flex: 1; font-size: 14px; font-weight: 600; }
+.ebar .pill-btn { min-height: 44px; padding: 0 22px; background: var(--brand); color: var(--on-brand); }
+.ebar.two { padding: 8px 0 0; border-radius: 0; background: linear-gradient(transparent, var(--bg) 30%); box-shadow: none; }
+.ebar.two .pill-btn { flex: 1; min-height: 48px; font-size: 15px; background: var(--ink); color: var(--bg); }
+.ebar.two .pill-btn.ghost { background: var(--track); color: var(--ink); }
+.diff { list-style: none; margin: 0; padding: 0; border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-card); }
+.diff li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+.diff li:last-child { border-bottom: 0; }
+.diff b { flex-basis: 100%; font-size: 13px; color: var(--ink-muted); font-weight: 600; }
+.diff .from { color: var(--ink-muted); text-decoration: line-through; white-space: pre-line; }
+.diff .to { color: var(--ink); font-weight: 600; white-space: pre-line; }
+.diff .arr { color: var(--ink-faint); }
+.diff .del b, .diff .del .from { color: var(--accent-ink); }
+.diff .add b { color: var(--brand); }
+.diff i { font-style: normal; color: var(--ink-faint); }
+.diff .long .from, .diff .long .to { flex-basis: 100%; }
+.diff .long .arr { display: none; }
 
 /* Google sign-in screen (covers everything until there is a live ID token) */
 .login {
@@ -719,6 +791,7 @@ button { font: inherit; color: inherit; }
     plan: new Set(loadPlan()),
     freq: loadFreq(),
     openRecipe: null,
+    edit: null, // recipe editor draft (see startEdit), null = showing the recipe
     // add sheet: ticks stay in `pending` until "เสร็จ"
     adding: false,
     addSearch: "",
@@ -770,18 +843,19 @@ button { font: inherit; color: inherit; }
     }));
 
     const byRecipe = new Map();
-    for (const r of W) {
+    W.forEach((r, i) => {
       const menu = clean(r[0]); const ing = clean(r[1]);
-      if (!menu || !ing) continue;
+      if (!menu || !ing) return;
       if (!byRecipe.has(menu)) byRecipe.set(menu, []);
       byRecipe.get(menu).push({
+        row: i + 2, // sheet row in "วัตถุดิบในสูตร" (data starts at row 2) — used by the editor
         name: ing,
         qty: clean(r[2]),
         unit: clean(r[3]),
         optional: toBool(r[4]),
         subs: splitList(r[5]),
       });
-    }
+    });
 
     const typeOf = new Map();
     for (const r of I) { const n = clean(r[0]); if (n) typeOf.set(n, clean(r[1]) || OTHER); }
@@ -897,7 +971,7 @@ button { font: inherit; color: inherit; }
       });
     }
     renderAdd(m);
-    if (state.openRecipe) {
+    if (state.openRecipe && !state.edit) { // the editor keeps its own form while open
       const hit = results.find((x) => x.recipe.name === state.openRecipe);
       if (hit) fillSheet(hit); else closeSheet();
     }
@@ -1158,7 +1232,9 @@ button { font: inherit; color: inherit; }
       const q = [i.qty, i.unit].filter(Boolean).join(" ");
       const cls = i.usedSub ? "have swap" : i.status;
       const st = i.usedSub ? ICON.swap : icon;
-      return `<li class="${cls}"><span class="st" aria-hidden="true">${st}</span><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q)}</span></li>`;
+      // the box toggles "มีในครัว" for the ingredient itself (tap again to undo a mis-tap)
+      const own = state.selected.has(i.name);
+      return `<li class="${cls}"><button type="button" class="st" data-own="${esc(i.name)}" aria-pressed="${own}" aria-label="${esc(i.name)}: ${own ? "มีในครัวแล้ว แตะเพื่อเอาออก" : "แตะเมื่อมีในครัวแล้ว"}">${st}</button><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q)}</span></li>`;
     };
     const url = safeUrl(r.link);
     const m = model();
@@ -1166,7 +1242,7 @@ button { font: inherit; color: inherit; }
     const steps = r.steps ? r.steps.split(/\n+/).filter((s) => s.trim()).length : 0;
     $("sheetBody").innerHTML = `
       <div class="dhead">
-        ${idx ? `<span class="folio">สูตรที่ <span class="num">${idx}</span> จาก <span class="num">${m.recipes.length}</span></span>` : ""}
+        <div class="dtop">${idx ? `<span class="folio">สูตรที่ <span class="num">${idx}</span> จาก <span class="num">${m.recipes.length}</span></span>` : "<span></span>"}<button type="button" class="dedit" data-edit="1">แก้ไขสูตร</button></div>
         <h2 id="sheetTitle">${esc(r.name)}</h2>
         <span class="status ${x.level}">${x.level === "ready" ? "ของครบ ทำได้เลย" : x.items.length ? `ขาดอีก ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>
         <div class="facts">
@@ -1199,11 +1275,232 @@ button { font: inherit; color: inherit; }
 
   function closeSheet() {
     if (!state.openRecipe) return;
+    if (state.edit) {
+      if (state.edit.saving) return;
+      if (editChanges().length && !confirm("ทิ้งสิ่งที่แก้ไว้ในสูตรนี้?")) return;
+      state.edit = null;
+    }
     state.openRecipe = null;
     const sheet = $("sheet"), scrim = $("scrim");
     sheet.classList.remove("open"); scrim.classList.remove("open");
     setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; if (!state.adding) scrim.hidden = true; } }, 300);
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  // ---------- recipe editor (Code.js saveRecipe_) ----------
+  // The draft keeps each sheet row's original display values (`before`) so the server can refuse to save
+  // if the sheet changed meanwhile. Fields edited here: สูตร A,B,D,E,F,H and วัตถุดิบในสูตร B–F.
+  const optCol = (c) => [...new Set((state.raw.options || []).map((r) => clean(r[c])).filter(Boolean))];
+  function startEdit(name) {
+    const m = model(); if (!m) return;
+    const before = (state.raw.recipes || []).find((r) => clean(r[0]) === name);
+    if (!before) return;
+    const items = (m.byRecipe.get(name) || []).map((it) => {
+      const raw = state.raw.rows[it.row - 2];
+      return { row: it.row, before: raw, name: it.name, qty: clean(raw[2]), unit: clean(raw[3]), optional: toBool(raw[4]), subs: splitList(raw[5]).join(", "), del: false };
+    });
+    state.edit = {
+      orig: name, before,
+      f: { name: clean(before[0]), cat: clean(before[1]), time: clean(before[3]), serves: clean(before[4]), steps: clean(before[5]), note: clean(before[7]) },
+      items, adds: [], open: null, step: "form", saving: false, error: "",
+    };
+    renderEdit();
+    $("sheet").querySelector(".scroll").scrollTop = 0;
+  }
+  const REC_FIELDS = [["name", 0, "ชื่อเมนู"], ["cat", 1, "หมวด"], ["time", 3, "เวลา (นาที)"], ["serves", 4, "จำนวนที่ได้ (ที่)"], ["steps", 5, "ขั้นตอน"], ["note", 7, "หมายเหตุ"]];
+  const amountOf = (qty, unit) => [qty, unit].filter(Boolean).join(" ");
+  const normList = (s) => splitList(s).join(", ");
+  // what will change, as [{what, from, to, kind}] — shown on the confirm step (the server logs its own copy)
+  function editChanges() {
+    const e = state.edit; if (!e) return [];
+    const out = [];
+    for (const [k, c, label] of REC_FIELDS) {
+      const a = clean(e.before[c]), b = e.f[k].trim();
+      if (a !== b) out.push({ what: label, from: a, to: b, kind: k === "steps" || k === "note" ? "long" : "" });
+    }
+    for (const it of e.items) {
+      if (it.del) { out.push({ what: `ลบ ${it.name}`, from: amountOf(clean(it.before[2]), clean(it.before[3])) || "(มี)", to: "", kind: "del" }); continue; }
+      const pairs = [["ปริมาณ", clean(it.before[2]), it.qty.trim()], ["หน่วย", clean(it.before[3]), it.unit],
+        ["ไม่ใส่ก็ได้", toBool(it.before[4]) ? "ใช่" : "ไม่", it.optional ? "ใช่" : "ไม่"], ["ของแทน", normList(it.before[5]), normList(it.subs)]];
+      for (const [label, a, b] of pairs) if (a !== b) out.push({ what: `${it.name}: ${label}`, from: a, to: b, kind: "" });
+    }
+    for (const a of e.adds) out.push({ what: `เพิ่ม ${a.name}`, from: "", to: amountOf(a.qty.trim(), a.unit) || "(มี)", kind: "add" });
+    return out;
+  }
+  // checks the server would also make, so mistakes show up before the confirm step
+  function editProblems() {
+    const e = state.edit;
+    const known = new Set((state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean));
+    const names = (state.raw.recipes || []).map((r) => clean(r[0]));
+    const n = e.f.name.trim();
+    if (!n) return "ชื่อเมนูว่างไม่ได้";
+    if (n !== e.orig && names.includes(n)) return `มีเมนูชื่อ "${n}" อยู่แล้ว`;
+    for (const k of ["time", "serves"]) if (e.f[k].trim() && !/^\d+(\.\d+)?$/.test(e.f[k].trim())) return "เวลาและจำนวนที่ได้ต้องเป็นตัวเลข";
+    for (const it of [...e.items.filter((x) => !x.del), ...e.adds]) {
+      const bad = splitList(it.subs).find((s) => !known.has(s));
+      if (bad) return `ของแทน "${bad}" ของ${it.name} ไม่มีในแท็บวัตถุดิบ`;
+    }
+    return "";
+  }
+  function selectHtml(attrs, value, list, blank) {
+    const opts = list.includes(value) || !value ? list : [value, ...list];
+    return `<select ${attrs}>${blank != null ? `<option value=""${value ? "" : " selected"}>${esc(blank)}</option>` : ""}${opts.map((o) => `<option${o === value ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  }
+  const itemChanged = (it) => it.qty.trim() !== clean(it.before[2]) || it.unit !== clean(it.before[3])
+    || it.optional !== toBool(it.before[4]) || normList(it.subs) !== normList(it.before[5]);
+  // one ingredient row in edit mode: same look as the recipe, tap to open its small panel, × to remove
+  function editRowHtml(it, key, i, units) {
+    const k = `${key}${i}`, open = state.edit.open === k;
+    if (it.del) {
+      return `<li class="gone"><span class="n">${esc(it.name)}<span class="sub">จะลบออก</span></span><span class="ld" aria-hidden="true"></span><button type="button" class="link-btn" data-edel="${i}">เอาคืน</button></li>`;
+    }
+    const sub = key === "a" ? "เพิ่มใหม่" : itemChanged(it) ? "แก้แล้ว"
+      : [it.optional ? "ไม่ใส่ก็ได้" : "", splitList(it.subs).length ? `แทนด้วย ${normList(it.subs)}` : ""].filter(Boolean).join(" · ");
+    const mark = key === "a" || itemChanged(it) ? " changed" : "";
+    const row = `<li class="erow${mark}${open ? " open" : ""}">
+      <button type="button" class="ebtn" data-eopen="${k}" aria-expanded="${open}"><span class="n">${esc(it.name)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(amountOf(it.qty.trim(), it.unit)) || "—"}</span></button>
+      <button type="button" class="ex" ${key === "a" ? `data-aundo="${i}"` : `data-edel="${i}"`} aria-label="ลบ ${esc(it.name)} ออกจากสูตร">${ICON.x}</button>
+    </li>`;
+    if (!open) return row;
+    return row + `<li class="epanel">
+      <div class="epair">
+        <input data-${key}="${i}" data-k="qty" value="${esc(it.qty)}" placeholder="ปริมาณ" aria-label="ปริมาณ ${esc(it.name)}" inputmode="decimal" data-enter="1">
+        ${selectHtml(`data-${key}="${i}" data-k="unit" aria-label="หน่วย ${esc(it.name)}"`, it.unit, units, "ไม่มีหน่วย")}
+      </div>
+      <label class="echeck"><input type="checkbox" data-${key}="${i}" data-k="optional"${it.optional ? " checked" : ""}> ไม่ใส่ก็ได้</label>
+      <label class="esub"><span>ของแทน</span><input data-${key}="${i}" data-k="subs" value="${esc(it.subs)}" placeholder="ไม่มี" aria-label="ของแทน ${esc(it.name)}" list="ingAll" data-enter="1"></label>
+      <button type="button" class="link-btn" data-eopen="">เสร็จ</button>
+    </li>`;
+  }
+  function barHtml() {
+    const n = editChanges().length;
+    return n ? `<span class="ecount">เปลี่ยน <span class="num">${n}</span> อย่าง</span><button type="button" class="pill-btn" data-ereview="1">บันทึก</button>` : "";
+  }
+  function updateBar() {
+    const bar = $("ebar"); if (!bar) return;
+    bar.innerHTML = barHtml(); bar.hidden = !bar.innerHTML;
+    const c = $("ecancel"); if (c) c.textContent = editChanges().length ? "ยกเลิก" : "เสร็จ";
+  }
+  function renderEdit() {
+    const e = state.edit; if (!e) return;
+    const body = $("sheetBody");
+    if (e.step === "confirm") {
+      const ch = editChanges();
+      const val = (v) => (v ? esc(v) : '<i>ว่าง</i>');
+      body.innerHTML = `
+        <div class="ehdr"><h2 id="sheetTitle">ตรวจก่อนบันทึก</h2><p>${esc(e.orig)} · เปลี่ยน <span class="num">${ch.length}</span> อย่าง จะเขียนลงชีตและเก็บประวัติไว้ในแท็บ "บันทึกการแก้ไข"</p></div>
+        <ul class="diff">${ch.map((c) => `<li class="${c.kind}"><b>${esc(c.what)}</b>${c.kind === "del" ? `<span class="from">${val(c.from)}</span>` : c.kind === "add" ? `<span class="to">${val(c.to)}</span>` : `<span class="from">${val(c.from)}</span><span class="arr" aria-label="เปลี่ยนเป็น">→</span><span class="to">${val(c.to)}</span>`}</li>`).join("")}</ul>
+        ${e.error ? `<p class="eerr" role="alert">${esc(e.error)}${e.conflict ? ` <button type="button" class="link-btn" data-ereload="1">โหลดข้อมูลใหม่</button>` : ""}</p>` : ""}
+        <div class="ebar two"><button type="button" class="pill-btn ghost" data-eback="1"${e.saving ? " disabled" : ""}>กลับไปแก้</button><button type="button" class="pill-btn" data-esave="1"${e.saving ? " disabled" : ""}>${e.saving ? "กำลังบันทึก…" : "ยืนยันบันทึก"}</button></div>`;
+      return;
+    }
+    const o = e.open;
+    const units = optCol(2), cats = optCol(0);
+    const ingAll = (state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean);
+    const used = new Set([...e.items.map((x) => x.name), ...e.adds.map((x) => x.name)]);
+    const fact = (k, label, unit) => o === k
+      ? `<div class="fact on"><small>${label}</small>${k === "cat"
+        ? selectHtml(`data-f="cat" data-close="1" aria-label="${label}"`, e.f.cat, cats, "ไม่ระบุ")
+        : `<input data-f="${k}" value="${esc(e.f[k])}" inputmode="numeric" aria-label="${label}" data-enter="1" data-focus="1">`}</div>`
+      : `<button type="button" class="fact ed" data-eopen="${k}"><small>${label}</small><b>${e.f[k] ? (unit ? `<span class="num">${esc(e.f[k])}</span> ${unit}` : esc(e.f[k])) : "—"}</b></button>`;
+    const textBlock = (k, title, rows, emptyText, showHtml) => `<section><h3>${title}<button type="button" class="link-btn sm" data-eopen="${o === k ? "" : k}">${o === k ? "เสร็จ" : e.f[k] ? "แก้" : "เพิ่ม"}</button></h3>
+      ${o === k ? `<textarea data-f="${k}" rows="${rows}" aria-label="${title}" data-focus="1">${esc(e.f[k])}</textarea>${k === "steps" ? '<p class="ehint">บรรทัดละขั้น</p>' : ""}`
+        : e.f[k] ? showHtml(e.f[k]) : `<p class="note">${emptyText}</p>`}</section>`;
+    body.innerHTML = `
+      <datalist id="ingAll">${ingAll.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>
+      <div class="dhead editing">
+        <div class="dtop"><span class="folio">กำลังแก้ไข · แตะตรงที่จะแก้</span><button type="button" class="dedit" id="ecancel" data-ecancel="1">${editChanges().length ? "ยกเลิก" : "เสร็จ"}</button></div>
+        ${o === "name" ? `<input class="ename" data-f="name" value="${esc(e.f.name)}" aria-label="ชื่อเมนู" data-enter="1" data-focus="1" autocomplete="off">`
+          : `<button type="button" class="ename-btn" data-eopen="name"><h2 id="sheetTitle">${esc(e.f.name || "—")}</h2></button>`}
+        <div class="facts">${fact("time", "เวลา", "นาที")}${fact("serves", "จำนวน", "ที่")}${fact("cat", "หมวด", "")}</div>
+      </div>
+      <section><h3>วัตถุดิบ<small>แตะเพื่อแก้ · × เพื่อลบ</small></h3>
+        <ul class="ing-list editing">${e.items.map((it, i) => editRowHtml(it, "i", i, units)).join("")}${e.adds.map((it, i) => editRowHtml(it, "a", i, units)).join("")}
+          <li class="eaddrow">${o === "add"
+            ? `<div class="eadd"><input id="eaddName" list="ingNew" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" autocomplete="off" data-focus="1"><datalist id="ingNew">${ingAll.filter((n) => !used.has(n)).map((n) => `<option value="${esc(n)}">`).join("")}</datalist><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>`
+            : `<button type="button" class="eadd-btn" data-eopen="add">${ICON.plus}เพิ่มวัตถุดิบ</button>`}</li>
+        </ul>
+      </section>
+      ${textBlock("steps", "วิธีทำ", 6, "ยังไม่มีขั้นตอน", stepsHtml)}
+      ${textBlock("note", "หมายเหตุ", 2, "ไม่มี", (t) => `<p class="note">${esc(t)}</p>`)}
+      ${e.error ? `<p class="eerr" role="alert">${esc(e.error)}</p>` : ""}
+      <div class="ebar" id="ebar"></div>`;
+    updateBar();
+  }
+  // keep the draft in sync as you type, without re-rendering (which would drop focus)
+  function onEditInput(ev) {
+    const e = state.edit, t = ev.target; if (!e || !t.dataset) return;
+    const v = t.type === "checkbox" ? t.checked : t.value;
+    if (t.dataset.f) e.f[t.dataset.f] = v;
+    else if (t.dataset.i && t.dataset.k) e.items[+t.dataset.i][t.dataset.k] = v;
+    else if (t.dataset.a && t.dataset.k) e.adds[+t.dataset.a][t.dataset.k] = v;
+    else return;
+    e.error = "";
+    if (t.dataset.close && ev.type === "change") { e.open = null; return rerenderEdit(); }
+    updateBar();
+  }
+  $("sheetBody").addEventListener("input", onEditInput);
+  $("sheetBody").addEventListener("change", onEditInput);
+  // structural changes (delete / add a row) re-render the form; keep the scroll position
+  function rerenderEdit() {
+    const sc = $("sheet").querySelector(".scroll"), top = sc.scrollTop;
+    renderEdit(); sc.scrollTop = top;
+    const f = $("sheetBody").querySelector("[data-focus]");
+    if (f) { f.focus({ preventScroll: true }); if (f.setSelectionRange && f.type !== "number") f.setSelectionRange(f.value.length, f.value.length); }
+  }
+  function editOpen(k) {
+    const e = state.edit;
+    e.open = k && e.open !== k ? k : null;
+    e.error = "";
+    rerenderEdit();
+  }
+  function editAdd() {
+    const e = state.edit, input = $("eaddName");
+    const n = clean(input && input.value);
+    if (!n) return input && input.focus();
+    const known = (state.raw.ingredients || []).some((r) => clean(r[0]) === n);
+    const back = e.items.find((x) => x.name === n && x.del);
+    if (back) back.del = false;
+    else if (e.items.some((x) => x.name === n) || e.adds.some((x) => x.name === n)) e.error = `${n} อยู่ในสูตรแล้ว`;
+    else if (!known) e.error = `ไม่มี "${n}" ในแท็บวัตถุดิบ เพิ่มในชีตก่อนแล้วกดโหลดใหม่`;
+    else { e.adds.push({ name: n, qty: "", unit: "", optional: false, subs: "" }); e.error = ""; }
+    if (!e.error) e.open = back ? null : `a${e.adds.length - 1}`; // new row opens so you can fill the amount
+    rerenderEdit();
+    const again = $("eaddName"); if (again && e.error) { again.value = n; again.focus(); }
+  }
+  async function editSave() {
+    const e = state.edit; if (!e || e.saving) return;
+    const name = e.f.name.trim();
+    const after = [...e.before];
+    for (const [k, c] of REC_FIELDS) after[c] = clean(e.before[c]) === e.f[k].trim() ? e.before[c] : e.f[k].trim();
+    const rowAfter = (it, before) => {
+      const opt = before && toBool(before[4]) === it.optional ? before[4] : it.optional ? "TRUE" : "FALSE";
+      const keep = (c, v) => (before && clean(before[c]) === v ? before[c] : v);
+      return [name, it.name, keep(2, it.qty.trim()), keep(3, it.unit), opt, before && normList(before[5]) === normList(it.subs) ? before[5] : normList(it.subs)];
+    };
+    const arg = {
+      name: e.orig,
+      recipe: { before: e.before, after },
+      rows: e.items.map((it) => ({ row: it.row, before: it.before, after: it.del ? null : rowAfter(it, it.before) })),
+      add: e.adds.map((it) => rowAfter(it, null)),
+    };
+    e.saving = true; e.error = ""; e.conflict = false; renderEdit();
+    try {
+      const d = await api("saveRecipe", arg);
+      setRaw(d);
+      if (name !== e.orig && state.plan.has(e.orig)) { state.plan.delete(e.orig); state.plan.add(name); savePlan(); }
+      state.edit = null;
+      state.openRecipe = name;
+      render();
+      showToast("บันทึกลงชีตแล้ว");
+      $("sheet").querySelector(".scroll").scrollTop = 0;
+    } catch (err) {
+      const msg = String((err && err.message) || err);
+      e.saving = false;
+      e.conflict = msg.startsWith("CONFLICT");
+      e.error = `บันทึกไม่สำเร็จ: ${msg.replace(/^(CONFLICT|INVALID):\s*/, "")}`;
+      renderEdit();
+    }
   }
 
   // ---------- add sheet ----------
@@ -1279,11 +1576,17 @@ button { font: inherit; color: inherit; }
   function showUndo(name) {
     lastRemoved = name;
     $("toastText").textContent = `เอา ${name} ออกแล้ว`;
+    $("toastUndo").hidden = false;
     $("toast").hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(hideUndo, 5000);
   }
   function hideUndo() { lastRemoved = null; clearTimeout(toastTimer); $("toast").hidden = true; }
+  function showToast(text) { // same toast, no undo button
+    showUndo(""); lastRemoved = null;
+    $("toastText").textContent = text;
+    $("toastUndo").hidden = true;
+  }
 
   // ---------- events ----------
   document.addEventListener("click", (e) => {
@@ -1335,6 +1638,37 @@ button { font: inherit; color: inherit; }
     }
     if (t.dataset.bought) { state.selected.add(t.dataset.bought); saveSelected(); return render(); }
     if (t.dataset.planclear) { state.plan.clear(); savePlan(); return render(); }
+    if (t.dataset.own) {
+      const n = t.dataset.own;
+      if (state.selected.has(n)) state.selected.delete(n); else { state.selected.add(n); bumpFreq([n]); }
+      saveSelected(); render();
+      const again = [...document.querySelectorAll("#sheetBody [data-own]")].find((b) => b.dataset.own === n);
+      if (again) again.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.edit) return startEdit(state.openRecipe);
+    if (state.edit) {
+      const e = state.edit;
+      if (t.dataset.edel) { const it = e.items[+t.dataset.edel]; it.del = !it.del; e.open = null; return rerenderEdit(); }
+      if (t.dataset.aundo) { e.adds.splice(+t.dataset.aundo, 1); e.open = null; return rerenderEdit(); }
+      if (t.dataset.eadd) return editAdd();
+      if ("eopen" in t.dataset) return editOpen(t.dataset.eopen);
+      if (t.dataset.ecancel) {
+        if (editChanges().length && !confirm("ทิ้งสิ่งที่แก้ไว้ในสูตรนี้?")) return;
+        state.edit = null; render(); $("sheet").querySelector(".scroll").scrollTop = 0; return;
+      }
+      if (t.dataset.ereview) {
+        e.error = editProblems() || (editChanges().length ? "" : "ยังไม่ได้แก้อะไร");
+        if (!e.error) e.step = "confirm";
+        renderEdit();
+        if (e.step === "confirm") $("sheet").querySelector(".scroll").scrollTop = 0;
+        else { const p = $("sheetBody").querySelector(".eerr"); if (p) p.scrollIntoView({ block: "center" }); }
+        return;
+      }
+      if (t.dataset.eback) { e.step = "form"; e.error = ""; e.open = null; return renderEdit(); }
+      if (t.dataset.esave) return editSave();
+      if (t.dataset.ereload) { state.edit = null; render(); return load(); }
+    }
     if (t.dataset.recipe) return openSheet(t.dataset.recipe);
     if (t.id === "clear") { state.selected.clear(); saveSelected(); return render(); }
     if (t.id === "sync") return refresh();
@@ -1342,6 +1676,11 @@ button { font: inherit; color: inherit; }
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.adding) closeAdd(false); else closeSheet(); } });
   $("aq").addEventListener("input", (e) => { state.addSearch = e.target.value; renderAdd(); });
+  $("sheetBody").addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" || !state.edit) return;
+    if (ev.target.id === "eaddName") { ev.preventDefault(); editAdd(); }
+    else if (ev.target.dataset.enter) { ev.preventDefault(); state.edit.open = null; rerenderEdit(); }
+  });
 
   // ---------- Google sign-in ----------
   // ID token lives ~1 h; kept in localStorage so reopening the app within the hour skips the login screen.
@@ -1402,12 +1741,15 @@ button { font: inherit; color: inherit; }
   }
 
   // ---------- data (Code.js getData_) ----------
+  function setRaw(d) {
+    state.raw = { recipes: d.recipes, rows: d.rows, ingredients: d.ingredients, options: d.options || [] };
+    state.updatedAt = d.updatedAt;
+  }
   async function load() {
     state.loading = true; render();
     try {
       const d = await api("getData");
-      state.raw = { recipes: d.recipes, rows: d.rows, ingredients: d.ingredients };
-      state.updatedAt = d.updatedAt;
+      setRaw(d);
       state.loading = false; state.notice = null;
     } catch (err) {
       // keep whatever was loaded before; only the banner changes
