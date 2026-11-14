@@ -455,7 +455,13 @@ button { font: inherit; color: inherit; }
 .tool-row { min-height: 56px; }
 .tool-row.shop { cursor: pointer; }
 .tool-row.shop .box { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); flex-shrink: 0; }
-.tool-row.shop:active .box { background: var(--brand); border-color: var(--brand); }
+.tool-row.shop .box { display: grid; place-items: center; color: transparent; }
+.tool-row.shop .box svg { width: 16px; height: 16px; }
+.tool-row.shop.done .box { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.tool-row.shop.done .t b { color: var(--ink-faint); text-decoration: line-through; }
+.tool-row.shop.done .t small { color: var(--ink-faint); }
+.tool-row.shop.done .gain { background: var(--track); color: var(--ink-faint); }
+.shop-done { margin: 10px 0 10px; }
 .pill-btn {
   flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; cursor: pointer;
@@ -738,6 +744,7 @@ button { font: inherit; color: inherit; }
   const ALMOST_MAX = 2;
   const STORE_KEY = "recipe-finder:selected";
   const PLAN_KEY = "recipe-finder:plan"; // menus added to the shopping list
+  const BOUGHT_KEY = "recipe-finder:bought"; // shopping-list items ticked (struck through) until "ซื้อเสร็จแล้ว"
   const FREQ_KEY = "recipe-finder:freq"; // ingredient → times added, for the "เพิ่มบ่อย" row
 
   // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
@@ -789,6 +796,7 @@ button { font: inherit; color: inherit; }
     menuTab: "ready", // ready | almost | all
     selected: new Set(loadSelected()),
     plan: new Set(loadPlan()),
+    bought: new Set(loadBought()),
     freq: loadFreq(),
     openRecipe: null,
     edit: null, // recipe editor draft (see startEdit), null = showing the recipe
@@ -811,6 +819,12 @@ button { font: inherit; color: inherit; }
   }
   function savePlan() {
     try { localStorage.setItem(PLAN_KEY, JSON.stringify([...state.plan])); } catch {}
+  }
+  function loadBought() {
+    try { return JSON.parse(localStorage.getItem(BOUGHT_KEY) || "[]"); } catch { return []; }
+  }
+  function saveBought() {
+    try { localStorage.setItem(BOUGHT_KEY, JSON.stringify([...state.bought])); } catch {}
   }
   function loadFreq() {
     try { const f = JSON.parse(localStorage.getItem(FREQ_KEY) || "{}"); return f && typeof f === "object" ? f : {}; } catch { return {}; }
@@ -928,7 +942,7 @@ button { font: inherit; color: inherit; }
     const ready = results.filter((x) => x.level === "ready");
     const almost = results.filter((x) => x.level === "almost");
 
-    const shopCount = m ? shoppingList(results).size : 0;
+    const shopCount = m ? [...shoppingList(results).keys()].filter((n) => !state.bought.has(n)).length : 0;
     $("headTitle").textContent = !m ? "วันนี้ทำอะไรกิน"
       : state.view === "pantry" ? "ของในครัว"
       : state.view === "shop" ? "รายการซื้อ"
@@ -1159,16 +1173,19 @@ button { font: inherit; color: inherit; }
     }
     const rows = [...list]
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "th"))
-      .map(([name, uses]) => `<button type="button" class="tool-row shop" data-bought="${esc(name)}">
-        <span class="box" aria-hidden="true"></span>
+      .map(([name, uses]) => `<button type="button" class="tool-row shop${state.bought.has(name) ? " done" : ""}" data-bought="${esc(name)}" aria-pressed="${state.bought.has(name)}">
+        <span class="box" aria-hidden="true">${ICON.check}</span>
         <span class="t"><b>${esc(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
         <span class="gain num">${uses.length} เมนู</span>
       </button>`).join("");
     const menus = [...state.plan].sort((a, b) => a.localeCompare(b, "th"));
+    const got = [...list.keys()].filter((n) => state.bought.has(n)).length;
+    const left = list.size - got;
     return `<section class="card tool">
-      <div class="tool-head"><h2>ต้องซื้อ${list.size ? ` <span class="cnt almost">${list.size}</span>` : ""}</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
-      <p class="tool-sub">${rows ? "ซื้อแล้วแตะที่ชื่อ ของจะย้ายเข้าครัวให้เลย" : "ของครบทุกเมนูในรายการแล้ว ไปทำได้เลย"}</p>
+      <div class="tool-head"><h2>ต้องซื้อ${left ? ` <span class="cnt almost">${left}</span>` : ""}</h2><button type="button" class="link-btn" data-planclear="1">ล้างรายการ</button></div>
+      <p class="tool-sub">${!rows ? "ของครบทุกเมนูในรายการแล้ว ไปทำได้เลย" : got ? `ซื้อแล้ว <span class="num">${got}</span> จาก <span class="num">${list.size}</span> อย่าง` : "ซื้อแล้วแตะเพื่อขีดฆ่า ซื้อเสร็จกดปุ่มด้านล่าง"}</p>
       ${rows}
+      ${rows ? `<button type="button" class="pill-btn wide shop-done" data-shopdone="1"${got ? "" : " disabled"}>ซื้อเสร็จแล้ว${got ? ` · ย้าย <span class="num">${got}</span> อย่างเข้าครัว` : ""}</button>` : ""}
     </section>
     <p class="chapter"><i aria-hidden="true"></i>สำหรับเมนู<i aria-hidden="true"></i></p>
     <div class="card list">${menus.map((n) => `<div class="menu-row"><button type="button" class="menu-card" data-recipe="${esc(n)}"><span class="body"><span class="name">${esc(n)}</span></span><span class="chev">${ICON.chev}</span></button><button type="button" class="add-mini" data-plan="${esc(n)}" aria-pressed="true" aria-label="เอาออกจากรายการซื้อ: ${esc(n)}">เอาออก</button></div>`).join("")}</div>`;
@@ -1588,6 +1605,22 @@ button { font: inherit; color: inherit; }
     $("toastUndo").hidden = true;
   }
 
+  // "ซื้อเสร็จแล้ว": ticked items go into the kitchen, the whole list (menus + ticks) is cleared
+  function finishShopping() {
+    const m = model(); if (!m) return;
+    const names = [...shoppingList(m.recipes.map((r) => evaluate(r, m.byRecipe))).keys()];
+    const got = names.filter((n) => state.bought.has(n));
+    const left = names.filter((n) => !state.bought.has(n));
+    if (!got.length) return;
+    if (left.length && !confirm(`ยังไม่ได้ติ๊ก ${left.join(", ")}\nจะล้างออกจากรายการด้วย ซื้อเสร็จแล้วใช่ไหม?`)) return;
+    got.forEach((n) => state.selected.add(n));
+    bumpFreq(got);
+    state.plan.clear(); state.bought.clear();
+    saveSelected(); savePlan(); saveBought();
+    render();
+    showToast(`ย้าย ${got.length} อย่างเข้าครัวแล้ว`);
+  }
+
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     const t = e.target.closest("button, .scrim");
@@ -1636,8 +1669,16 @@ button { font: inherit; color: inherit; }
       savePlan();
       return render();
     }
-    if (t.dataset.bought) { state.selected.add(t.dataset.bought); saveSelected(); return render(); }
-    if (t.dataset.planclear) { state.plan.clear(); savePlan(); return render(); }
+    if (t.dataset.bought) { // tick = strike through; tap again to undo
+      const n = t.dataset.bought;
+      state.bought.has(n) ? state.bought.delete(n) : state.bought.add(n);
+      saveBought(); render();
+      const again = [...document.querySelectorAll("[data-bought]")].find((b) => b.dataset.bought === n);
+      if (again) again.focus({ preventScroll: true });
+      return;
+    }
+    if (t.dataset.shopdone) return finishShopping();
+    if (t.dataset.planclear) { state.plan.clear(); state.bought.clear(); savePlan(); saveBought(); return render(); }
     if (t.dataset.own) {
       const n = t.dataset.own;
       if (state.selected.has(n)) state.selected.delete(n); else { state.selected.add(n); bumpFreq([n]); }
