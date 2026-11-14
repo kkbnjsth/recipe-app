@@ -1801,15 +1801,35 @@ button { font: inherit; color: inherit; }
   }
   const refresh = load;
 
+  // ---------- auto-update ----------
+  // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
+  // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
+  // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
+  const APP_VERSION = "929df10";
+  async function checkUpdate() {
+    if (APP_VERSION === "dev" || state.edit || state.adding) return;
+    try {
+      const r = await fetch(`${location.pathname}?check=${Date.now()}`, { cache: "no-store" });
+      const m = (await r.text()).match(/APP_VERSION\s*=\s*"(\w+)"/);
+      if (!m || m[1] === APP_VERSION) return;
+      const tried = `recipe-finder:tried-${m[1]}`; // once per version, so a stale CDN copy can't cause a reload loop
+      if (sessionStorage.getItem(tried)) return;
+      sessionStorage.setItem(tried, "1");
+      location.replace(`${location.pathname}?v=${m[1]}`);
+    } catch {}
+  }
+
   // coming back to the tab after editing the sheet should show the new rows
   let hiddenAt = 0;
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) hiddenAt = Date.now();
-    else if (hiddenAt && Date.now() - hiddenAt > 60000 && !state.loading) load();
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    checkUpdate();
+    if (hiddenAt && Date.now() - hiddenAt > 60000 && !state.loading) load();
   });
 
   render();
   load();
+  checkUpdate();
 })();
 </script>
 </body>
