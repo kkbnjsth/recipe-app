@@ -121,7 +121,7 @@ button { font: inherit; color: inherit; }
   margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 120px;
+  padding-block: calc(20px + env(safe-area-inset-top, 0px)) 120px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1811,7 +1811,7 @@ button { font: inherit; color: inherit; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "374327c";
+  const APP_VERSION = "639c926";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
