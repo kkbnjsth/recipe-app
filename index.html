@@ -1107,18 +1107,29 @@ body.cooking .app { padding-bottom: 180px; }
         members.get(g).push(n);
       }
     }
-    // anything named in a recipe but missing from the master list still gets a chip (groups are not things to tick)
+    // ประเภท (ตัวเลือก!B) works like a group too: a recipe row "เนื้อสัตว์" = any meat in the kitchen
+    const typeMembers = new Map();
+    for (const t of (state.raw.options || []).map((r) => clean(r[1])).filter(Boolean)) {
+      if (typeOf.has(t) || members.has(t)) continue; // a real item / group of that name wins
+      typeMembers.set(t, [...typeOf].filter(([, ty]) => ty === t).map(([n]) => n));
+    }
+    // anything named in a recipe but missing from the master list still gets a chip (groups / types are not things to tick)
+    const anyOf = (n) => members.has(n) || typeMembers.has(n);
     for (const list of byRecipe.values()) {
       for (const it of list) {
-        if (!typeOf.has(it.name) && !members.has(it.name)) typeOf.set(it.name, OTHER);
-        for (const s of it.subs) if (!typeOf.has(s) && !members.has(s)) typeOf.set(s, OTHER);
+        if (!typeOf.has(it.name) && !anyOf(it.name)) typeOf.set(it.name, OTHER);
+        for (const s of it.subs) if (!typeOf.has(s) && !anyOf(s)) typeOf.set(s, OTHER);
       }
     }
-    MEMBERS = members;
+    MEMBERS = new Map([...members, ...typeMembers]);
+    TYPE_NAMES = new Set(typeMembers.keys());
     return { recipes, byRecipe, typeOf, itemGroup, members };
   }
   // what in the kitchen satisfies `name`: the item itself, or for a group name, the first item of that group I have
-  let MEMBERS = new Map();
+  let MEMBERS = new Map(); // group or ประเภท → items in it (inKitchen looks here)
+  let TYPE_NAMES = new Set(); // ประเภท names usable as "anything of this type"
+  const isAnyOf = (n) => MEMBERS.has(n); // a group / type name, not a thing you can own
+  const anyName = (n) => esc(n) + (isAnyOf(n) ? " (อะไรก็ได้)" : "");
   // sel = the kitchen to look in (default: the real one; the ซื้อ page also asks "after shopping")
   function inKitchen(name, sel = state.selected) {
     if (sel.has(name)) return name;
@@ -1332,7 +1343,7 @@ body.cooking .app { padding-bottom: 180px; }
     const card = (x) => {
       let extra = "";
       if (x.level === "almost") {
-        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}${i.status === "short" ? ` มี ${fmt(i.haveN)}/${fmt(i.needN)}` : ""}</span>`).join("")}</span>`;
+        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${anyName(i.name)}${i.status === "short" ? ` มี ${fmt(i.haveN)}/${fmt(i.needN)}` : ""}</span>`).join("")}</span>`;
       } else if (x.level === "far") {
         extra = `<span class="need">${x.items.length ? `ขาด ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>`;
       } else if (x.swaps.length) {
@@ -1447,7 +1458,7 @@ body.cooking .app { padding-bottom: 180px; }
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "th"))
       .map(([name, uses]) => `<button type="button" class="tool-row shop${state.bought.has(name) ? " done" : ""}" data-bought="${esc(name)}" aria-pressed="${state.bought.has(name)}">
         <span class="box" aria-hidden="true">${ICON.check}</span>
-        <span class="t"><b>${esc(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
+        <span class="t"><b>${anyName(name)}</b><small>${uses.map((u) => esc(u.menu + (u.qty ? " " + u.qty : ""))).join(" · ")}</small></span>
         <span class="gain num">${uses.length} เมนู</span>
       </button>`).join("");
     const menus = [...state.plan].sort((a, b) => a.localeCompare(b, "th"));
@@ -1482,7 +1493,7 @@ body.cooking .app { padding-bottom: 180px; }
     const oneHtml = one.length ? `<section class="card tool unlock">
       <div class="tool-head"><h2>หยิบเพิ่มอีกอย่าง</h2></div>
       <p class="tool-sub">ซื้อตามรายการแล้ว ขาดอีกชิ้นเดียวก็ทำเมนูพวกนี้ได้</p>
-      ${one.map(([name, ms]) => `<div class="tool-row"><div class="t"><b>${esc(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
+      ${one.map(([name, ms]) => `<div class="tool-row"><div class="t"><b>${anyName(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
         <button type="button" class="pill-btn" data-unlock="${esc(name)}" data-after="1">${ICON.plus}รายการซื้อ</button></div>`).join("")}
     </section>` : "";
     return `${bonusRows ? `<p class="chapter"><i aria-hidden="true"></i>ซื้อครบแล้ว ทำได้อีก<i aria-hidden="true"></i></p><div class="card list">${bonusRows}</div>` : ""}${oneHtml}`;
@@ -1499,7 +1510,7 @@ body.cooking .app { padding-bottom: 180px; }
       <p class="tool-sub">ขาดอยู่ชิ้นเดียว ซื้อมาแล้วเมนูจะครบ</p>
       ${rows.map(([name, ms]) => {
         const added = ms.every((n) => state.plan.has(n));
-        return `<div class="tool-row"><div class="t"><b>${esc(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
+        return `<div class="tool-row"><div class="t"><b>${anyName(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
           <button type="button" class="pill-btn${added ? " ghost" : ""}" data-unlock="${esc(name)}" ${added ? "disabled" : ""}>${added ? `${ICON.check}เพิ่มแล้ว` : `${ICON.plus}รายการซื้อ`}</button></div>`;
       }).join("")}
     </section>`;
@@ -1538,10 +1549,12 @@ body.cooking .app { padding-bottom: 180px; }
     const rowHtml = (i) => {
       const icon = i.status === "have" ? ICON.check : i.status === "miss" || i.status === "short" ? ICON.miss : ICON.skip;
       let sub = "";
-      if (i.usedSub) sub = `ใช้${esc(i.usedSub)}แทน`;
+      const any = isAnyOf(i.name);
+      if (i.usedSub) sub = any ? `ใช้${esc(i.usedSub)}` : `ใช้${esc(i.usedSub)}แทน`;
+      else if (any && i.status === "miss") sub = `อะไรก็ได้ใน${TYPE_NAMES.has(i.name) ? "ประเภท" : "กลุ่ม"}นี้${i.subs.length ? ` หรือ ${i.subs.map(esc).join(", ")}` : ""}`;
       else if (i.status === "short") sub = `มี ${fmt(i.haveN)} · ขาดอีก ${fmt(i.lack)} ${esc(i.unit)}`;
       else if (i.lack) sub = `มี ${fmt(i.haveN)} ${esc(i.unit)} ไม่พอ แต่ไม่ใส่ก็ได้`;
-      else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map((s) => (MEMBERS.has(s) ? `${esc(s)} (อะไรก็ได้ในกลุ่ม)` : esc(s))).join(", ")} แทนได้`;
+      else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map((s) => (isAnyOf(s) ? `${esc(s)} (อะไรก็ได้)` : esc(s))).join(", ")} แทนได้`;
       else if (i.status === "miss") sub = "ยังไม่มี";
       else if (i.status === "skip") sub = "ไม่ใส่ก็ได้";
       else if (i.optional) sub = "ไม่ใส่ก็ได้";
@@ -1549,8 +1562,11 @@ body.cooking .app { padding-bottom: 180px; }
       const cls = i.usedSub ? "have swap" : i.status === "short" ? "miss" : i.status;
       const st = i.usedSub ? ICON.swap : icon;
       // the box toggles "มีในครัว" for the ingredient itself (tap again to undo a mis-tap)
+      // a group / type row has nothing to tick: the kitchen holds real things
       const own = state.selected.has(i.name);
-      return `<li class="${cls}"><button type="button" class="st" data-own="${esc(i.name)}" aria-pressed="${own}" aria-label="${esc(i.name)}: ${own ? "มีในครัวแล้ว แตะเพื่อเอาออก" : "แตะเมื่อมีในครัวแล้ว"}">${st}</button><span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q)}</span></li>`;
+      const box = any ? `<span class="st" aria-hidden="true">${st}</span>`
+        : `<button type="button" class="st" data-own="${esc(i.name)}" aria-pressed="${own}" aria-label="${esc(i.name)}: ${own ? "มีในครัวแล้ว แตะเพื่อเอาออก" : "แตะเมื่อมีในครัวแล้ว"}">${st}</button>`;
+      return `<li class="${cls}">${box}<span class="n">${esc(i.name)}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q)}</span></li>`;
     };
     const url = safeUrl(r.link);
     const m = model();
@@ -1949,7 +1965,7 @@ body.cooking .app { padding-bottom: 180px; }
       <section><h3>วัตถุดิบ<small>แตะเพื่อแก้ · × เพื่อลบ</small></h3>
         <ul class="ing-list editing">${e.items.map((it, i) => editRowHtml(it, "i", i, units)).join("")}${e.adds.map((it, i) => editRowHtml(it, "a", i, units)).join("")}
           <li class="eaddrow">${o === "add"
-            ? `<div class="eadd"><input id="eaddName" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" aria-controls="addSugg" autocomplete="off"${e.subNew && e.subNew.row === "add" ? ` value="${esc(e.subNew.name)}"` : ' data-focus="1"'}><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>
+            ? `<div class="eadd"><input id="eaddName" placeholder="พิมพ์ชื่อวัตถุดิบ กลุ่ม หรือประเภท" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" aria-controls="addSugg" autocomplete="off"${e.subNew && e.subNew.row === "add" ? ` value="${esc(e.subNew.name)}"` : ' data-focus="1"'}><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>
               <div id="addSugg" aria-live="polite"></div>
               ${e.subNew && e.subNew.row === "add" ? newIngFormHtml(e.subNew.name, "") : ""}`
             : `<button type="button" class="eadd-btn" data-eopen="add">${ICON.plus}เพิ่มวัตถุดิบ</button>`}</li>
@@ -1997,11 +2013,11 @@ body.cooking .app { padding-bottom: 180px; }
   // ---- substitutes: chips + suggestions; a name that isn't in the sheet yet becomes a new ingredient on save ----
   const sheetNames = () => new Set((state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean));
   function allGroups() { // groups in the sheet + groups typed for new ingredients in this edit
-    const g = new Set(MEMBERS.keys());
+    const g = new Set(MEMBERS.keys()); for (const t of TYPE_NAMES) g.delete(t);
     for (const x of Object.values(state.edit ? state.edit.newIng : {})) if (x.group) g.add(x.group);
     return g;
   }
-  const isKnown = (n) => sheetNames().has(n) || allGroups().has(n) || !!(state.edit && state.edit.newIng[n]);
+  const isKnown = (n) => sheetNames().has(n) || allGroups().has(n) || TYPE_NAMES.has(n) || !!(state.edit && state.edit.newIng[n]);
   const editRow = (k) => (k[0] === "a" ? state.edit.adds : state.edit.items)[+k.slice(1)];
   // ranked: substitutes already used for this ingredient elsewhere → groups of the same type (its own first) → items of its group → same type
   function suggestSubs(name, current) {
@@ -2025,7 +2041,7 @@ body.cooking .app { padding-bottom: 180px; }
   function subLabel(s) {
     const e = state.edit;
     const fresh = e && e.newIng[s] ? '<span class="tagx new">ใหม่</span>' : "";
-    return `${esc(s)}${allGroups().has(s) ? '<span class="tagx">ทั้งกลุ่ม</span>' : ""}${fresh}`;
+    return `${esc(s)}${allGroups().has(s) ? '<span class="tagx">ทั้งกลุ่ม</span>' : TYPE_NAMES.has(s) ? '<span class="tagx">ทั้งประเภท</span>' : ""}${fresh}`;
   }
   function newIngFormHtml(n, forName) {
     const m = model(), e = state.edit;
@@ -2044,7 +2060,7 @@ body.cooking .app { padding-bottom: 180px; }
     const e = state.edit, list = splitList(it.subs);
     return `<div class="esubs"><span class="elabel">ของแทน</span>
       ${list.length ? `<div class="chips">${list.map((s) => `<button type="button" class="chip sub-chip" data-subrm="${esc(s)}" data-row="${k}" aria-label="เอา ${esc(s)} ออกจากของแทน">${subLabel(s)}${ICON.x}</button>`).join("")}</div>` : '<p class="ehint">ยังไม่มีของแทน</p>'}
-      <div class="eadd"><input id="subIn" data-subin="${k}" placeholder="พิมพ์ชื่อของแทน หรือกลุ่ม" aria-label="เพิ่มของแทน ${esc(it.name)}" aria-controls="subSugg" autocomplete="off"${e.subNew && e.subNew.row === k ? "" : " data-focus=\"1\""}><button type="button" class="pill-btn" data-subtyped="${k}">เพิ่ม</button></div>
+      <div class="eadd"><input id="subIn" data-subin="${k}" placeholder="พิมพ์ชื่อของแทน กลุ่ม หรือประเภท" aria-label="เพิ่มของแทน ${esc(it.name)}" aria-controls="subSugg" autocomplete="off"${e.subNew && e.subNew.row === k ? "" : " data-focus=\"1\""}><button type="button" class="pill-btn" data-subtyped="${k}">เพิ่ม</button></div>
       ${e.subNew && e.subNew.row === k ? newIngFormHtml(e.subNew.name, it.name) : ""}
       <div id="subSugg" aria-live="polite">${subSuggHtml(k, "")}</div>
     </div>`;
@@ -2052,7 +2068,7 @@ body.cooking .app { padding-bottom: 180px; }
   // no browser dropdown (it lists every ingredient): chips = ranked suggestions, or the names matching what is typed
   function matchNames(q, exclude, ranked) {
     const ql = q.toLowerCase();
-    const all = [...new Set([...ranked, ...sheetNames(), ...allGroups(), ...Object.keys(state.edit.newIng)])].filter((n) => !exclude.has(n));
+    const all = [...new Set([...ranked, ...sheetNames(), ...allGroups(), ...TYPE_NAMES, ...Object.keys(state.edit.newIng)])].filter((n) => !exclude.has(n));
     const hit = all.filter((n) => n.toLowerCase().includes(ql));
     return hit.sort((a, b) => b.toLowerCase().startsWith(ql) - a.toLowerCase().startsWith(ql)).slice(0, 8);
   }
@@ -2070,8 +2086,8 @@ body.cooking .app { padding-bottom: 180px; }
     const e = state.edit; q = clean(q);
     if (!q) return "";
     const used = new Set([...e.items.filter((x) => !x.del), ...e.adds].map((x) => x.name));
-    const names = matchNames(q, used, []).filter((n) => !allGroups().has(n));
-    return names.length ? `<div class="chips">${names.map((n) => `<button type="button" class="chip add" data-eaddpick="${esc(n)}">${ICON.plus}${esc(n)}</button>`).join("")}</div>` : "";
+    const names = matchNames(q, used, []);
+    return names.length ? `<div class="chips">${names.map((n) => `<button type="button" class="chip add" data-eaddpick="${esc(n)}">${ICON.plus}${subLabel(n)}</button>`).join("")}</div>` : "";
   }
   function addSub(k, raw) {
     const e = state.edit, it = editRow(k), n = clean(raw);
@@ -2118,7 +2134,6 @@ body.cooking .app { padding-bottom: 180px; }
     const back = e.items.find((x) => x.name === n && x.del);
     if (back) back.del = false;
     else if (e.items.some((x) => x.name === n) || e.adds.some((x) => x.name === n)) e.error = `${n} อยู่ในสูตรแล้ว`;
-    else if (allGroups().has(n)) e.error = `"${n}" เป็นชื่อกลุ่ม ใส่ชื่อของจริง หรือใส่กลุ่มเป็นของแทน`;
     else if (!isKnown(n)) { e.subNew = { row: "add", name: n }; e.error = ""; return rerenderEdit(); }
     else { e.adds.push({ name: n, qty: "", unit: "", optional: false, subs: "" }); e.error = ""; }
     if (!e.error) e.open = back ? null : `a${e.adds.length - 1}`; // new row opens so you can fill the amount
@@ -2252,17 +2267,19 @@ body.cooking .app { padding-bottom: 180px; }
     // a counted thing that was short: assume enough was bought for every menu on the list (fix it in ในครัว if not)
     const list = shoppingList(m.recipes.map((r) => evaluate(r, m.byRecipe)));
     const recount = [];
-    got.forEach((n) => {
+    const anyGot = got.filter(isAnyOf); // "เนื้อสัตว์ (อะไรก็ได้)": which one was bought is unknown → tick it in ในครัว
+    got.filter((n) => !isAnyOf(n)).forEach((n) => {
       const c = state.counts.get(n);
       const need = (list.get(n) || []).reduce((s, u) => s + (u.needN || 0), 0);
       if (c && need > c.count) { setHave(n, true, need, c.unit); recount.push(`${n} ${fmt(need)} ${c.unit}`); }
       else setHave(n, true);
     });
-    bumpFreq(got);
+    bumpFreq(got.filter((n) => !isAnyOf(n)));
     state.plan.clear(); state.bought.clear();
     savePlan(); saveBought();
     render();
-    showToast(`ย้าย ${got.length} อย่างเข้าครัวแล้ว${recount.length ? ` · นับ${recount.join(", ")}` : ""}`);
+    const moved = got.length - anyGot.length;
+    showToast(`${moved ? `ย้าย ${moved} อย่างเข้าครัวแล้ว` : "ล้างรายการแล้ว"}${recount.length ? ` · นับ${recount.join(", ")}` : ""}${anyGot.length ? ` · ติ๊ก${anyGot.join(", ")}ที่ซื้อมาในครัวเองด้วย` : ""}`);
   }
 
   // ---------- events ----------
@@ -2550,7 +2567,7 @@ body.cooking .app { padding-bottom: 180px; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "11f256f";
+  const APP_VERSION = "e55a478";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
