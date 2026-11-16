@@ -1736,8 +1736,6 @@ button { font: inherit; color: inherit; }
     }
     const o = e.open;
     const units = optCol(2), cats = optCol(0);
-    const ingAll = (state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean);
-    const used = new Set([...e.items.map((x) => x.name), ...e.adds.map((x) => x.name)]);
     const fact = (k, label, unit) => o === k
       ? `<div class="fact on"><small>${label}</small>${k === "cat"
         ? selectHtml(`data-f="cat" data-close="1" aria-label="${label}"`, e.f.cat, cats, "ไม่ระบุ")
@@ -1747,7 +1745,6 @@ button { font: inherit; color: inherit; }
       ${o === k ? `<textarea data-f="${k}" rows="${rows}" aria-label="${title}" data-focus="1">${esc(e.f[k])}</textarea>${k === "steps" ? '<p class="ehint">บรรทัดละขั้น</p>' : ""}`
         : e.f[k] ? showHtml(e.f[k]) : `<p class="note">${emptyText}</p>`}</section>`;
     body.innerHTML = `
-      <datalist id="ingAll">${ingAll.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>
       <div class="dhead editing">
         <div class="dtop"><span class="folio">กำลังแก้ไข · แตะตรงที่จะแก้</span><button type="button" class="dedit" id="ecancel" data-ecancel="1">${editChanges().length ? "ยกเลิก" : "เสร็จ"}</button></div>
         ${o === "name" ? `<input class="ename" data-f="name" value="${esc(e.f.name)}" aria-label="ชื่อเมนู" data-enter="1" data-focus="1" autocomplete="off">`
@@ -1757,7 +1754,8 @@ button { font: inherit; color: inherit; }
       <section><h3>วัตถุดิบ<small>แตะเพื่อแก้ · × เพื่อลบ</small></h3>
         <ul class="ing-list editing">${e.items.map((it, i) => editRowHtml(it, "i", i, units)).join("")}${e.adds.map((it, i) => editRowHtml(it, "a", i, units)).join("")}
           <li class="eaddrow">${o === "add"
-            ? `<div class="eadd"><input id="eaddName" list="ingNew" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" autocomplete="off"${e.subNew && e.subNew.row === "add" ? ` value="${esc(e.subNew.name)}"` : ' data-focus="1"'}><datalist id="ingNew">${[...ingAll, ...Object.keys(e.newIng)].filter((n) => !used.has(n)).map((n) => `<option value="${esc(n)}">`).join("")}</datalist><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>
+            ? `<div class="eadd"><input id="eaddName" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" aria-controls="addSugg" autocomplete="off"${e.subNew && e.subNew.row === "add" ? ` value="${esc(e.subNew.name)}"` : ' data-focus="1"'}><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>
+              <div id="addSugg" aria-live="polite"></div>
               ${e.subNew && e.subNew.row === "add" ? newIngFormHtml(e.subNew.name, "") : ""}`
             : `<button type="button" class="eadd-btn" data-eopen="add">${ICON.plus}เพิ่มวัตถุดิบ</button>`}</li>
         </ul>
@@ -1781,6 +1779,12 @@ button { font: inherit; color: inherit; }
     updateBar();
   }
   $("sheetBody").addEventListener("input", onEditInput);
+  $("sheetBody").addEventListener("input", (ev) => { // filter the suggestion chips as you type (no re-render, keeps focus)
+    if (!state.edit) return;
+    const t = ev.target;
+    if (t.dataset.subin && $("subSugg")) $("subSugg").innerHTML = subSuggHtml(t.dataset.subin, t.value);
+    else if (t.id === "eaddName" && $("addSugg")) $("addSugg").innerHTML = addSuggHtml(t.value);
+  });
   $("sheetBody").addEventListener("change", onEditInput);
   // structural changes (delete / add a row) re-render the form; keep the scroll position
   function rerenderEdit() {
@@ -1843,15 +1847,36 @@ button { font: inherit; color: inherit; }
   }
   function subsEditorHtml(it, k) {
     const e = state.edit, list = splitList(it.subs);
-    const sugg = suggestSubs(it.name, list);
-    const opts = [...new Set([...sheetNames(), ...allGroups(), ...Object.keys(e.newIng)])].filter((n) => n !== it.name && !list.includes(n));
     return `<div class="esubs"><span class="elabel">ของแทน</span>
       ${list.length ? `<div class="chips">${list.map((s) => `<button type="button" class="chip sub-chip" data-subrm="${esc(s)}" data-row="${k}" aria-label="เอา ${esc(s)} ออกจากของแทน">${subLabel(s)}${ICON.x}</button>`).join("")}</div>` : '<p class="ehint">ยังไม่มีของแทน</p>'}
-      <div class="eadd"><input id="subIn" data-subin="${k}" list="subList" placeholder="พิมพ์ชื่อของแทน หรือกลุ่ม" aria-label="เพิ่มของแทน ${esc(it.name)}" autocomplete="off"${e.subNew && e.subNew.row === k ? "" : " data-focus=\"1\""}><button type="button" class="pill-btn" data-subtyped="${k}">เพิ่ม</button></div>
-      <datalist id="subList">${opts.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>
+      <div class="eadd"><input id="subIn" data-subin="${k}" placeholder="พิมพ์ชื่อของแทน หรือกลุ่ม" aria-label="เพิ่มของแทน ${esc(it.name)}" aria-controls="subSugg" autocomplete="off"${e.subNew && e.subNew.row === k ? "" : " data-focus=\"1\""}><button type="button" class="pill-btn" data-subtyped="${k}">เพิ่ม</button></div>
       ${e.subNew && e.subNew.row === k ? newIngFormHtml(e.subNew.name, it.name) : ""}
-      ${sugg.length ? `<p class="ehint">แนะนำ แตะเพื่อเพิ่ม</p><div class="chips">${sugg.map((s) => `<button type="button" class="chip add" data-subadd="${esc(s)}" data-row="${k}">${ICON.plus}${subLabel(s)}</button>`).join("")}</div>` : ""}
+      <div id="subSugg" aria-live="polite">${subSuggHtml(k, "")}</div>
     </div>`;
+  }
+  // no browser dropdown (it lists every ingredient): chips = ranked suggestions, or the names matching what is typed
+  function matchNames(q, exclude, ranked) {
+    const ql = q.toLowerCase();
+    const all = [...new Set([...ranked, ...sheetNames(), ...allGroups(), ...Object.keys(state.edit.newIng)])].filter((n) => !exclude.has(n));
+    const hit = all.filter((n) => n.toLowerCase().includes(ql));
+    return hit.sort((a, b) => b.toLowerCase().startsWith(ql) - a.toLowerCase().startsWith(ql)).slice(0, 8);
+  }
+  function subSuggHtml(k, q) {
+    const it = editRow(k); if (!it) return "";
+    const list = splitList(it.subs), ranked = suggestSubs(it.name, list);
+    q = clean(q);
+    const names = q ? matchNames(q, new Set([it.name, ...list]), ranked) : ranked;
+    const fresh = q && !isKnown(q) && q !== it.name && !/[,，、]/.test(q)
+      ? `<button type="button" class="chip add fresh" data-subadd="${esc(q)}" data-row="${k}">${ICON.plus}เพิ่ม "${esc(q)}" เป็นของใหม่</button>` : "";
+    if (!names.length && !fresh) return q ? '<p class="ehint">ไม่เจอชื่อที่ตรง</p>' : "";
+    return `<p class="ehint">${q ? "ตรงกับที่พิมพ์" : "แนะนำ"} แตะเพื่อเพิ่ม</p><div class="chips">${names.map((s) => `<button type="button" class="chip add" data-subadd="${esc(s)}" data-row="${k}">${ICON.plus}${subLabel(s)}</button>`).join("")}${fresh}</div>`;
+  }
+  function addSuggHtml(q) {
+    const e = state.edit; q = clean(q);
+    if (!q) return "";
+    const used = new Set([...e.items.filter((x) => !x.del), ...e.adds].map((x) => x.name));
+    const names = matchNames(q, used, []).filter((n) => !allGroups().has(n));
+    return names.length ? `<div class="chips">${names.map((n) => `<button type="button" class="chip add" data-eaddpick="${esc(n)}">${ICON.plus}${esc(n)}</button>`).join("")}</div>` : "";
   }
   function addSub(k, raw) {
     const e = state.edit, it = editRow(k), n = clean(raw);
@@ -2149,6 +2174,7 @@ button { font: inherit; color: inherit; }
         return rerenderEdit();
       }
       if (t.dataset.subadd) return addSub(t.dataset.row, t.dataset.subadd);
+      if (t.dataset.eaddpick) { $("eaddName").value = t.dataset.eaddpick; return editAdd(); }
       if (t.dataset.subtyped) return addSub(t.dataset.subtyped, $("subIn") && $("subIn").value);
       if (t.dataset.subnew === "ok") return confirmNewIng();
       if (t.dataset.subnew === "no") { e.subNew = null; return rerenderEdit(); }
@@ -2315,7 +2341,7 @@ button { font: inherit; color: inherit; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "7c28235";
+  const APP_VERSION = "9dd899b";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
