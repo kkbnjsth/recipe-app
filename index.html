@@ -2069,8 +2069,15 @@ body.cooking .app { padding-bottom: 180px; }
   function matchNames(q, exclude, ranked) {
     const ql = q.toLowerCase();
     const all = [...new Set([...ranked, ...sheetNames(), ...allGroups(), ...TYPE_NAMES, ...Object.keys(state.edit.newIng)])].filter((n) => !exclude.has(n));
-    const hit = all.filter((n) => n.toLowerCase().includes(ql));
-    return hit.sort((a, b) => b.toLowerCase().startsWith(ql) - a.toLowerCase().startsWith(ql)).slice(0, 8);
+    const hit = all.filter((n) => n.toLowerCase().includes(ql))
+      .sort((a, b) => b.toLowerCase().startsWith(ql) - a.toLowerCase().startsWith(ql)).slice(0, 8);
+    // typing a thing (เนื้อวัวสันคอสไลซ์) also offers its group (เนื้อวัว) and type (เนื้อสัตว์) = "any of these"
+    const m = model(), more = [];
+    for (const n of hit) {
+      const g = m && m.itemGroup.get(n), t = m && m.typeOf.get(n);
+      for (const x of [g, TYPE_NAMES.has(t) ? t : null]) if (x && !exclude.has(x) && !hit.includes(x) && !more.includes(x)) more.push(x);
+    }
+    return [...hit, ...more.slice(0, 4)];
   }
   function subSuggHtml(k, q) {
     const it = editRow(k); if (!it) return "";
@@ -2567,7 +2574,7 @@ body.cooking .app { padding-bottom: 180px; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "e55a478";
+  const APP_VERSION = "90edbb5";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
