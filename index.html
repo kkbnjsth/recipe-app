@@ -288,6 +288,12 @@ button { font: inherit; color: inherit; }
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, transparent);
 }
 .chip.have svg { width: 14px; height: 14px; opacity: 0.55; }
+/* counted kitchen item: "ไข่ไก่ [4 ฟอง] ×"; press and hold opens the count sheet, so no text-selection callout */
+.chip.have[data-hold] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.qty-badge {
+  padding: 0 8px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px; font-weight: 700; line-height: 22px; color: var(--ink);
+}
 .chip.add { gap: 6px; padding: 8px 16px 8px 12px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-faint); }
 .chip.add svg { width: 14px; height: 14px; }
 .add-btn {
@@ -611,6 +617,52 @@ button { font: inherit; color: inherit; }
   background: transparent; color: var(--on-brand); border: 1px solid color-mix(in srgb, var(--on-brand) 55%, transparent);
 }
 .dedit:focus-visible { outline: 2px solid var(--on-brand); outline-offset: 2px; }
+/* Count sheet (press and hold a kitchen chip) */
+.sheet.count { z-index: 32; }
+.sheet.count h2 { margin: 0; font-family: var(--font-head); font-size: 24px; font-weight: 600; line-height: 1.35; }
+.crow {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 52px; border-bottom: 1px solid var(--line-soft); cursor: pointer;
+}
+.crow small { display: block; font-size: 12px; color: var(--ink-muted); }
+.crow input { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--brand); }
+.stepper { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.stepper button {
+  width: 48px; height: 48px; flex-shrink: 0; border: 0; border-radius: 50%; background: var(--track); color: var(--ink);
+  font-size: 22px; font-weight: 600; cursor: pointer;
+}
+.stepper button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.stepper .sv { display: flex; flex-direction: column; align-items: center; font-size: 13px; color: var(--ink-muted); }
+.sheet .stepper .sv input {
+  width: 110px; min-height: 0; padding: 0; border: 0; border-bottom: 2px solid var(--line); border-radius: 0; background: transparent;
+  text-align: center; font-family: var(--font-head); font-style: italic; font-size: 40px; font-weight: 600; line-height: 1.2;
+}
+.sheet .stepper .sv input:focus { outline: 0; border-bottom-color: var(--brand); }
+.stepper.sm { gap: 6px; }
+.stepper.sm button { width: 40px; height: 40px; font-size: 18px; }
+.stepper.sm b { min-width: 64px; text-align: center; font-family: var(--font-head); font-style: italic; font-size: 17px; font-weight: 600; }
+.units { justify-content: center; }
+/* ทำแล้ว */
+.cook-btn, .cook-foot .pill-btn:last-child { gap: 8px; background: var(--brand); color: var(--on-brand); }
+.cook-btn svg { width: 18px; height: 18px; }
+.ehdr .folio { font-family: var(--font-head); font-style: italic; font-size: 14px; color: var(--ink-muted); }
+.ehdr h2 { font-size: 26px; }
+.cook-list { list-style: none; margin: 0; padding: 0; }
+.cook-row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+.cook-row:last-child { border-bottom: 0; }
+.cook-row .n { flex: 1; min-width: 0; }
+.cook-row .n small { display: block; font-size: 12px; color: var(--ink-muted); }
+.seg2 { display: flex; flex-shrink: 0; padding: 3px; border-radius: 999px; background: var(--track); }
+.seg2 button {
+  min-height: 38px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--ink-muted); font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.seg2 button[aria-pressed="true"][data-v="1"] { background: var(--accent-light); color: var(--accent-ink); font-weight: 600; }
+.seg2 button[aria-pressed="true"][data-v="0"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--line); }
+.seg2 button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.cook-foot { display: flex; gap: 10px; }
+.cook-foot .pill-btn { min-height: 48px; padding: 0 20px; font-size: 15px; }
+.cook-foot .pill-btn:last-child { flex: 1; }
 /* Recipe editor: the recipe page itself becomes editable — tap a thing to edit just that thing */
 .ehdr { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
 .ehdr p { margin: 0; font-size: 13px; color: var(--ink-muted); }
@@ -731,6 +783,11 @@ button { font: inherit; color: inherit; }
   <div class="scroll" id="sheetBody"></div>
 </div>
 
+<div class="sheet count" id="countSheet" role="dialog" aria-modal="true" aria-labelledby="countTitle" hidden>
+  <div class="grab"></div>
+  <div class="scroll" id="countBody"></div>
+</div>
+
 <div class="sheet add" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addTitle" hidden>
   <div class="grab"></div>
   <div class="add-head">
@@ -756,6 +813,13 @@ button { font: inherit; color: inherit; }
   const PLAN_KEY = "recipe-finder:plan"; // menus added to the shopping list
   const BOUGHT_KEY = "recipe-finder:bought"; // shopping-list items ticked (struck through) until "ซื้อเสร็จแล้ว"
   const FREQ_KEY = "recipe-finder:freq"; // ingredient → times added, for the "เพิ่มบ่อย" row
+  // The kitchen (selected + counts) lives in the sheet tab "ในครัว" (Pantry.js); localStorage only caches it
+  // and keeps changes that haven't reached the server yet (PENDING_KEY), so the app still works offline.
+  const COUNT_KEY = "recipe-finder:counts"; // ingredient → {count, unit} (cache)
+  const PENDING_KEY = "recipe-finder:pantry-pending"; // ingredient → op not yet saved to the sheet
+  const SYNCED_KEY = "recipe-finder:pantry-synced"; // set once the server has the kitchen (one-time move from localStorage)
+  // types that a recipe usually uses up — preset to "หมดแล้ว" in the ทำแล้ว sheet; everything else is preset to "ยังเหลือ"
+  const USED_UP_TYPES = new Set(["เนื้อสัตว์", "อาหารทะเล", "ผัก", "ผลไม้"]);
 
   // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
   const API_URL = "https://script.google.com/macros/s/AKfycbxLo1n0SuPjIpr0CTiRSFnpjIHZYSZEq6bkb555f3ye1eBsCs-UsAEzTKega9Fz3ynE3Q/exec";
@@ -805,6 +869,10 @@ button { font: inherit; color: inherit; }
     cat: "ทั้งหมด",
     menuTab: "ready", // ready | almost | all
     selected: new Set(loadSelected()),
+    counts: new Map(loadCounts()), // ingredient → {count, unit}; only for things in `selected` that are counted
+    serverPantry: false, // true once the server answered with a kitchen (new Code.js deployed)
+    countFor: null, // count sheet: {name, on, n, unit, units}
+    cook: null, // ทำแล้ว sheet: {name, rows}
     plan: new Set(loadPlan()),
     bought: new Set(loadBought()),
     freq: loadFreq(),
@@ -844,6 +912,80 @@ button { font: inherit; color: inherit; }
     for (const n of names) state.freq[n] = freqOf(n) + 1;
     try { localStorage.setItem(FREQ_KEY, JSON.stringify(state.freq)); } catch {}
   }
+  function loadCounts() {
+    try {
+      const o = JSON.parse(localStorage.getItem(COUNT_KEY) || "{}");
+      return Object.entries(o).filter(([, v]) => v && Number.isFinite(v.count));
+    } catch { return []; }
+  }
+  function saveCounts() {
+    try { localStorage.setItem(COUNT_KEY, JSON.stringify(Object.fromEntries(state.counts))); } catch {}
+  }
+
+  // ---------- kitchen store: every change to selected/counts goes through here ----------
+  // Each change becomes one op {name, have, count, unit}; ops wait in `pending` (one per ingredient, newest wins)
+  // and are sent to savePantry in batches. The server answers with the whole kitchen; pending ops are laid on top.
+  const pending = new Map(loadPending());
+  function loadPending() {
+    try { return Object.entries(JSON.parse(localStorage.getItem(PENDING_KEY) || "{}")); } catch { return []; }
+  }
+  function savePending() {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(Object.fromEntries(pending))); } catch {}
+  }
+  function applyOp(op) {
+    if (op.have) {
+      state.selected.add(op.name);
+      if (op.count != null) state.counts.set(op.name, { count: op.count, unit: op.unit || "" });
+      else state.counts.delete(op.name);
+    } else {
+      state.selected.delete(op.name);
+      state.counts.delete(op.name);
+    }
+  }
+  // have = in the kitchen or not; count = number or null (not counted); a change of "have" alone keeps the count
+  function setHave(name, have, count = have ? state.counts.get(name)?.count ?? null : null, unit = state.counts.get(name)?.unit || "") {
+    const op = { name, have, count: have && count != null ? Math.max(0, Math.round(count * 100) / 100) : null, unit: have && count != null ? unit : "" };
+    applyOp(op);
+    pending.set(name, op);
+    saveSelected(); saveCounts(); savePending();
+    scheduleSync();
+  }
+  const snapshot = () => ({ selected: new Set(state.selected), counts: new Map(state.counts) });
+  function restore(s) { // undo: put the kitchen back as it was, as ops
+    for (const n of new Set([...state.selected, ...s.selected])) {
+      const c = s.counts.get(n);
+      setHave(n, s.selected.has(n), c ? c.count : null, c ? c.unit : "");
+    }
+  }
+  function applyServerPantry(list) {
+    state.selected = new Set(list.map((p) => p.name));
+    state.counts = new Map(list.filter((p) => p.count != null).map((p) => [p.name, { count: p.count, unit: p.unit }]));
+    for (const op of pending.values()) applyOp(op);
+    saveSelected(); saveCounts();
+  }
+  let syncTimer = null, syncing = false;
+  function scheduleSync(ms = 800) {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncPantry, ms);
+  }
+  async function syncPantry() {
+    if (syncing || !pending.size || !state.serverPantry) return;
+    syncing = true;
+    const sent = new Map(pending);
+    try {
+      const res = await api("savePantry", { ops: [...sent.values()] });
+      for (const [n, op] of sent) if (pending.get(n) === op) pending.delete(n); // keep ops changed while sending
+      savePending();
+      applyServerPantry(res.pantry || []);
+      if (state.notice && state.notice.pantry) state.notice = null;
+    } catch (err) {
+      state.notice = { pantry: true, text: `บันทึกของในครัวลงชีตไม่สำเร็จ (${(err && err.message) || err}) ของยังอยู่ในเครื่องนี้`, action: "ลองอีกครั้ง", onAction: () => syncPantry() };
+    }
+    syncing = false;
+    render();
+    if (pending.size && !state.notice) scheduleSync();
+  }
+  const fmt = (n) => String(Math.round(n * 100) / 100);
 
   // ---------- parsing ----------
   const clean = (v) => (v == null ? "" : String(v).trim());
@@ -893,14 +1035,22 @@ button { font: inherit; color: inherit; }
     return { recipes, byRecipe, typeOf };
   }
 
+  // A counted ingredient is compared with the recipe only when the units match (2 ฟอง vs 1 ฟอง);
+  // other units (260 กรัม of a potato counted in หัว) fall back to "have it or not".
   function evaluate(recipe, byRecipe) {
-    const items = (byRecipe.get(recipe.name) || []).map((it) => {
-      if (state.selected.has(it.name)) return { ...it, status: "have" };
+    const list = byRecipe.get(recipe.name) || [];
+    const needOf = (name, unit) => list.reduce((s, r) => s + (r.name === name && r.unit === unit ? toNum(r.qty) || 0 : 0), 0);
+    const items = list.map((it) => {
+      const c = state.selected.has(it.name) ? state.counts.get(it.name) : null;
+      const need = c && c.unit === it.unit ? needOf(it.name, it.unit) : 0;
+      const short = need > c?.count ? { haveN: c.count, needN: need, lack: need - c.count } : null;
+      if (state.selected.has(it.name) && !short) return { ...it, status: "have" };
       const sub = it.subs.find((s) => state.selected.has(s));
       if (sub) return { ...it, status: "have", usedSub: sub };
+      if (short) return { ...it, ...short, status: it.optional ? "have" : "short" };
       return { ...it, status: it.optional ? "skip" : "miss" };
     });
-    const missing = items.filter((i) => i.status === "miss");
+    const missing = items.filter((i) => i.status === "miss" || i.status === "short");
     const swaps = items.filter((i) => i.usedSub);
     let level = "far";
     if (items.length && missing.length === 0) level = "ready";
@@ -927,7 +1077,8 @@ button { font: inherit; color: inherit; }
       if (!state.plan.has(x.recipe.name)) continue;
       for (const it of x.missing) {
         if (!list.has(it.name)) list.set(it.name, []);
-        list.get(it.name).push({ menu: x.recipe.name, qty: [it.qty, it.unit].filter(Boolean).join(" ") });
+        const qty = it.status === "short" ? `ขาด ${fmt(it.lack)} ${it.unit}` : [it.qty, it.unit].filter(Boolean).join(" ");
+        list.get(it.name).push({ menu: x.recipe.name, qty, needN: it.status === "short" ? it.needN : null });
       }
     }
     return list;
@@ -997,8 +1148,9 @@ button { font: inherit; color: inherit; }
     renderAdd(m);
     if (state.openRecipe && !state.edit) { // the editor keeps its own form while open
       const hit = results.find((x) => x.recipe.name === state.openRecipe);
-      if (hit) fillSheet(hit); else closeSheet();
+      if (!hit) closeSheet(); else if (state.cook) fillCook(); else fillSheet(hit);
     }
+    if (state.countFor) fillCount();
   }
 
   function loadingHtml() {
@@ -1044,12 +1196,16 @@ button { font: inherit; color: inherit; }
     const groups = byType([...state.selected], m);
     const listHtml = groups.length
       ? `<div class="row-between">
-          <span class="picked">แตะ × เมื่อของหมด</span>
+          <span class="picked">แตะ × เมื่อของหมด · กดค้างเพื่อนับจำนวน</span>
           <button type="button" class="link-btn" id="clear">ล้างทั้งหมด</button>
         </div>
         ${groups.map(([t, names]) => `<section class="card group" style="--c: var(${TYPE_COLOR[t]})">
           <h2><span class="cdot"></span>${esc(t)}<span class="count">${names.length}</span></h2>
-          <div class="chips">${names.map((n) => `<button type="button" class="chip have" data-rm="${esc(n)}" aria-label="${esc(n)} แตะเพื่อเอาออก">${esc(n)}${ICON.x}</button>`).join("")}</div>
+          <div class="chips">${names.map((n) => {
+            const c = state.counts.get(n);
+            const badge = c ? ` <span class="qty-badge num">${fmt(c.count)}${c.unit ? ` ${esc(c.unit)}` : ""}</span>` : "";
+            return `<button type="button" class="chip have" data-rm="${esc(n)}" data-hold="${esc(n)}" aria-label="${esc(n)}${c ? ` ${fmt(c.count)} ${esc(c.unit)}` : ""} แตะเพื่อเอาออก กดค้างเพื่อนับจำนวน">${esc(n)}${badge}${ICON.x}</button>`;
+          }).join("")}</div>
         </section>`).join("")}`
       : `<div class="card empty"><h3>ยังไม่มีของในครัว</h3><p>กดเพิ่มของ แล้วเลือกของที่มีอยู่ตอนนี้ รวมเครื่องปรุงด้วย</p></div>`;
 
@@ -1071,7 +1227,7 @@ button { font: inherit; color: inherit; }
     const card = (x) => {
       let extra = "";
       if (x.level === "almost") {
-        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}</span>`).join("")}</span>`;
+        extra = `<span class="need">ขาด ${x.missing.map((i) => `<span class="miss">${esc(i.name)}${i.status === "short" ? ` มี ${fmt(i.haveN)}/${fmt(i.needN)}` : ""}</span>`).join("")}</span>`;
       } else if (x.level === "far") {
         extra = `<span class="need">${x.items.length ? `ขาด ${x.missing.length} อย่าง` : "ยังไม่มีวัตถุดิบในชีต"}</span>`;
       } else if (x.swaps.length) {
@@ -1249,15 +1405,17 @@ button { font: inherit; color: inherit; }
   function fillSheet(x) {
     const r = x.recipe;
     const rowHtml = (i) => {
-      const icon = i.status === "have" ? ICON.check : i.status === "miss" ? ICON.miss : ICON.skip;
+      const icon = i.status === "have" ? ICON.check : i.status === "miss" || i.status === "short" ? ICON.miss : ICON.skip;
       let sub = "";
       if (i.usedSub) sub = `ใช้${esc(i.usedSub)}แทน`;
+      else if (i.status === "short") sub = `มี ${fmt(i.haveN)} · ขาดอีก ${fmt(i.lack)} ${esc(i.unit)}`;
+      else if (i.lack) sub = `มี ${fmt(i.haveN)} ${esc(i.unit)} ไม่พอ แต่ไม่ใส่ก็ได้`;
       else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map(esc).join(", ")} แทนได้`;
       else if (i.status === "miss") sub = "ยังไม่มี";
       else if (i.status === "skip") sub = "ไม่ใส่ก็ได้";
       else if (i.optional) sub = "ไม่ใส่ก็ได้";
       const q = [i.qty, i.unit].filter(Boolean).join(" ");
-      const cls = i.usedSub ? "have swap" : i.status;
+      const cls = i.usedSub ? "have swap" : i.status === "short" ? "miss" : i.status;
       const st = i.usedSub ? ICON.swap : icon;
       // the box toggles "มีในครัว" for the ingredient itself (tap again to undo a mis-tap)
       const own = state.selected.has(i.name);
@@ -1279,6 +1437,7 @@ button { font: inherit; color: inherit; }
         </div>
       </div>
       ${x.items.length ? `<section><h3>วัตถุดิบ<small>${x.level === "ready" ? "มีครบ" : `ขาด ${x.missing.length} อย่าง`}</small></h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
+      ${cookNames(x).length ? `<button type="button" class="pill-btn wide cook-btn" data-cook="1">${ICON.check}ทำเมนูนี้แล้ว</button>` : ""}
       ${x.level !== "ready" && x.missing.length ? `<button type="button" class="pill-btn wide ${state.plan.has(r.name) ? "ghost" : ""}" data-plan="${esc(r.name)}">${state.plan.has(r.name) ? "เอาออกจากรายการซื้อของ" : "ใส่รายการซื้อของ"}</button>` : ""}
       ${r.steps ? `<section><h3>วิธีทำ${steps > 1 ? `<small>${steps} ขั้น</small>` : ""}</h3>${stepsHtml(r.steps)}</section>` : ""}
       ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
@@ -1308,10 +1467,118 @@ button { font: inherit; color: inherit; }
       state.edit = null;
     }
     state.openRecipe = null;
+    state.cook = null;
     const sheet = $("sheet"), scrim = $("scrim");
     sheet.classList.remove("open"); scrim.classList.remove("open");
     setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; if (!state.adding) scrim.hidden = true; } }, 300);
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+
+  // ---------- count sheet (press and hold a chip in ในครัว) ----------
+  // units the recipes use with a number for this ingredient, most used first
+  function unitsOf(name, m) {
+    const f = new Map();
+    for (const list of m.byRecipe.values()) {
+      for (const r of list) if (r.name === name && r.unit && toNum(r.qty) != null) f.set(r.unit, (f.get(r.unit) || 0) + 1);
+    }
+    return [...f].sort((a, b) => b[1] - a[1]).map(([u]) => u);
+  }
+  function openCount(name) {
+    const m = model(); if (!m || !state.selected.has(name)) return;
+    const c = state.counts.get(name);
+    const units = unitsOf(name, m);
+    if (c && c.unit && !units.includes(c.unit)) units.unshift(c.unit);
+    state.countFor = { name, on: !!c, n: c ? c.count : 1, unit: c ? c.unit : units[0] || "", units };
+    lastFocus = document.activeElement;
+    fillCount();
+    const sheet = $("countSheet"), scrim = $("scrim");
+    sheet.hidden = false; scrim.hidden = false;
+    requestAnimationFrame(() => { if (state.countFor) { sheet.classList.add("open"); scrim.classList.add("open"); } });
+    sheet.setAttribute("tabindex", "-1");
+    sheet.focus({ preventScroll: true });
+  }
+  function fillCount() {
+    const f = state.countFor;
+    const stepper = f.on
+      ? `<div class="stepper"><button type="button" data-cstep="-1" aria-label="ลด 1">−</button><label class="sv"><input id="cN" type="number" inputmode="decimal" min="0" step="any" value="${fmt(f.n)}" aria-label="จำนวน${esc(f.name)}"><span>${esc(f.unit)}</span></label><button type="button" data-cstep="1" aria-label="เพิ่ม 1">+</button></div>
+        ${f.units.length > 1 ? `<div class="chips units" role="group" aria-label="หน่วย">${f.units.map((u) => `<button type="button" class="filter" data-cunit="${esc(u)}" aria-pressed="${u === f.unit}">${esc(u)}</button>`).join("")}</div>` : ""}`
+      : "";
+    $("countBody").innerHTML = `
+      <div class="row-between"><h2 id="countTitle">${esc(f.name)}</h2><button type="button" class="link-btn" data-ccancel="1">ปิด</button></div>
+      ${f.units.length
+        ? `<label class="crow"><span>นับจำนวน<small>เทียบกับสูตรที่ใช้หน่วย ${esc(f.unit)} ไม่พอจะขึ้นว่าขาด</small></span><input type="checkbox" id="cOn"${f.on ? " checked" : ""}></label>${stepper}`
+        : `<p class="note">สูตรในชีตไม่ได้ใช้${esc(f.name)}เป็นจำนวน เลยยังนับไม่ได้ แค่มีหรือไม่มีพอ</p>`}
+      <button type="button" class="pill-btn wide" data-cdone="1">${f.units.length ? "บันทึก" : "ตกลง"}</button>`;
+  }
+  function closeCount(save) {
+    const f = state.countFor; if (!f) return;
+    if (save && f.units.length) {
+      if (!f.on) setHave(f.name, true, null);
+      else if (f.n > 0) setHave(f.name, true, f.n, f.unit);
+      else { const before = snapshot(); setHave(f.name, false); showUndo(`${f.name} หมดแล้ว เอาออกจากครัว`, () => restore(before)); }
+    }
+    state.countFor = null;
+    const sheet = $("countSheet"), scrim = $("scrim");
+    sheet.classList.remove("open"); scrim.classList.remove("open");
+    setTimeout(() => { if (!state.countFor) { sheet.hidden = true; if (!state.openRecipe && !state.adding) scrim.hidden = true; } }, 300);
+    if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+    render();
+  }
+
+  // ---------- ทำแล้ว: after cooking, take what ran out out of the kitchen ----------
+  // what this recipe took from the kitchen: the ingredient itself, or the substitute that was used
+  function cookNames(x) {
+    const names = [];
+    for (const i of x.items) {
+      const n = i.usedSub || (state.selected.has(i.name) ? i.name : null);
+      if (n && !names.includes(n)) names.push(n);
+    }
+    return names;
+  }
+  function startCook() {
+    const m = model(); if (!m) return;
+    const r = m.recipes.find((y) => y.name === state.openRecipe); if (!r) return;
+    const list = m.byRecipe.get(r.name) || [];
+    state.cook = { name: r.name, rows: cookNames(evaluate(r, m.byRecipe)).map((n) => {
+      const type = groupOf(m.typeOf.get(n));
+      const c = state.counts.get(n);
+      if (!c) return { name: n, type, counted: false, out: USED_UP_TYPES.has(type) };
+      const used = list.reduce((s, it) => s + (it.name === n && it.unit === c.unit ? toNum(it.qty) || 0 : 0), 0);
+      return { name: n, type, counted: true, from: c.count, used, to: Math.max(0, c.count - used), unit: c.unit };
+    }) };
+    fillCook();
+    $("sheet").querySelector(".scroll").scrollTop = 0;
+  }
+  function fillCook() {
+    const k = state.cook;
+    const row = ([r, i]) => r.counted
+      ? `<li class="cook-row"><span class="n">${esc(r.name)}<small>เดิม ${fmt(r.from)} ${esc(r.unit)}${r.used ? ` · สูตรใช้ ${fmt(r.used)}` : ""}</small></span>
+          <span class="stepper sm"><button type="button" data-kstep="${i}" data-d="-1" aria-label="ลด${esc(r.name)}">−</button><b class="num">${fmt(r.to)} ${esc(r.unit)}</b><button type="button" data-kstep="${i}" data-d="1" aria-label="เพิ่ม${esc(r.name)}">+</button></span></li>`
+      : `<li class="cook-row"><span class="n">${esc(r.name)}</span>
+          <span class="seg2" role="group" aria-label="${esc(r.name)}"><button type="button" data-kout="${i}" data-v="1" aria-pressed="${r.out}">หมดแล้ว</button><button type="button" data-kout="${i}" data-v="0" aria-pressed="${!r.out}">ยังเหลือ</button></span></li>`;
+    const idx = k.rows.map((r, i) => [r, i]);
+    const groups = [
+      ["นับไว้ ลดให้แล้ว", idx.filter(([r]) => r.counted)],
+      ["น่าจะใช้หมด", idx.filter(([r]) => !r.counted && USED_UP_TYPES.has(r.type))],
+      ["น่าจะยังเหลือ", idx.filter(([r]) => !r.counted && !USED_UP_TYPES.has(r.type))],
+    ].filter(([, l]) => l.length);
+    const outN = k.rows.filter((r) => (r.counted ? r.to <= 0 : r.out)).length;
+    $("sheetBody").innerHTML = `
+      <div class="ehdr"><span class="folio">ทำ${esc(k.name)}แล้ว</span><h2 id="sheetTitle">อะไรหมดไปบ้าง?</h2><p>ตั้งไว้ให้ตามประเภทของ แตะเปลี่ยนได้</p></div>
+      ${groups.map(([t, l]) => `<section><h3>${t}</h3><ul class="cook-list">${l.map(row).join("")}</ul></section>`).join("")}
+      <div class="cook-foot"><button type="button" class="pill-btn ghost" data-kcancel="1">ยกเลิก</button><button type="button" class="pill-btn" data-kdone="1">${outN ? `เอาออกจากครัว <span class="num">${outN}</span> อย่าง` : "บันทึก"}</button></div>`;
+  }
+  function finishCook() {
+    const k = state.cook; if (!k) return;
+    const before = snapshot();
+    let out = 0;
+    for (const r of k.rows) {
+      if (r.counted ? r.to <= 0 : r.out) { setHave(r.name, false); out++; }
+      else if (r.counted && r.to !== r.from) setHave(r.name, true, r.to, r.unit);
+    }
+    closeSheet();
+    render();
+    showUndo(out ? `อัปเดตครัวแล้ว เอาออก ${out} อย่าง` : "อัปเดตจำนวนในครัวแล้ว", () => restore(before));
   }
 
   // ---------- recipe editor (Code.js saveRecipe_) ----------
@@ -1586,9 +1853,8 @@ button { font: inherit; color: inherit; }
   function closeAdd(commit) {
     if (!state.adding) return;
     if (commit && state.pending.size) {
-      for (const n of state.pending) state.selected.add(n);
+      for (const n of state.pending) setHave(n, true);
       bumpFreq([...state.pending]);
-      saveSelected();
     }
     state.adding = false; state.pending = new Set();
     const sheet = $("addSheet"), scrim = $("scrim");
@@ -1598,22 +1864,18 @@ button { font: inherit; color: inherit; }
     render();
   }
 
-  // ---------- undo toast (pantry ×) ----------
-  let lastRemoved = null, toastTimer = null;
-  function showUndo(name) {
-    lastRemoved = name;
-    $("toastText").textContent = `เอา ${name} ออกแล้ว`;
-    $("toastUndo").hidden = false;
+  // ---------- toast with undo (pantry ×, ทำแล้ว, count to 0) ----------
+  let undoFn = null, toastTimer = null;
+  function showUndo(text, undo) {
+    undoFn = undo || null;
+    $("toastText").textContent = text;
+    $("toastUndo").hidden = !undoFn;
     $("toast").hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(hideUndo, 5000);
   }
-  function hideUndo() { lastRemoved = null; clearTimeout(toastTimer); $("toast").hidden = true; }
-  function showToast(text) { // same toast, no undo button
-    showUndo(""); lastRemoved = null;
-    $("toastText").textContent = text;
-    $("toastUndo").hidden = true;
-  }
+  function hideUndo() { undoFn = null; clearTimeout(toastTimer); $("toast").hidden = true; }
+  const showToast = (text) => showUndo(text); // same toast, no undo button
 
   // "ซื้อเสร็จแล้ว": ticked items go into the kitchen, the whole list (menus + ticks) is cleared
   function finishShopping() {
@@ -1623,19 +1885,28 @@ button { font: inherit; color: inherit; }
     const left = names.filter((n) => !state.bought.has(n));
     if (!got.length) return;
     if (left.length && !confirm(`ยังไม่ได้ติ๊ก ${left.join(", ")}\nจะล้างออกจากรายการด้วย ซื้อเสร็จแล้วใช่ไหม?`)) return;
-    got.forEach((n) => state.selected.add(n));
+    // a counted thing that was short: assume enough was bought for every menu on the list (fix it in ในครัว if not)
+    const list = shoppingList(m.recipes.map((r) => evaluate(r, m.byRecipe)));
+    const recount = [];
+    got.forEach((n) => {
+      const c = state.counts.get(n);
+      const need = (list.get(n) || []).reduce((s, u) => s + (u.needN || 0), 0);
+      if (c && need > c.count) { setHave(n, true, need, c.unit); recount.push(`${n} ${fmt(need)} ${c.unit}`); }
+      else setHave(n, true);
+    });
     bumpFreq(got);
     state.plan.clear(); state.bought.clear();
-    saveSelected(); savePlan(); saveBought();
+    savePlan(); saveBought();
     render();
-    showToast(`ย้าย ${got.length} อย่างเข้าครัวแล้ว`);
+    showToast(`ย้าย ${got.length} อย่างเข้าครัวแล้ว${recount.length ? ` · นับ${recount.join(", ")}` : ""}`);
   }
 
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     const t = e.target.closest("button, .scrim");
     if (!t) return;
-    if (t.id === "scrim") return state.adding ? closeAdd(false) : closeSheet();
+    if (held) { held = false; if (t.dataset.hold) return; } // the click that ends a press-and-hold
+    if (t.id === "scrim") return state.countFor ? closeCount(false) : state.adding ? closeAdd(false) : closeSheet();
     if (t.id === "addOpen") return openAdd();
     if (t.id === "addClose") return closeAdd(false);
     if (t.id === "addDone") return closeAdd(true);
@@ -1651,13 +1922,38 @@ button { font: inherit; color: inherit; }
       if (hit) hit[1].forEach((n) => { if (!state.selected.has(n)) state.pending.add(n); });
       return renderAdd(m);
     }
-    if (t.dataset.rm) { state.selected.delete(t.dataset.rm); saveSelected(); showUndo(t.dataset.rm); return render(); }
-    if (t.id === "toastUndo") {
-      if (lastRemoved) { state.selected.add(lastRemoved); saveSelected(); }
-      hideUndo();
+    if (t.dataset.rm) {
+      const n = t.dataset.rm, before = snapshot();
+      setHave(n, false);
+      showUndo(`เอา ${n} ออกแล้ว`, () => restore(before));
       return render();
     }
-    if (t.dataset.qadd) { state.selected.add(t.dataset.qadd); bumpFreq([t.dataset.qadd]); saveSelected(); return render(); }
+    if (t.id === "toastUndo") {
+      const undo = undoFn;
+      hideUndo();
+      if (undo) undo();
+      return render();
+    }
+    if (t.dataset.qadd) { setHave(t.dataset.qadd, true); bumpFreq([t.dataset.qadd]); return render(); }
+    // count sheet
+    if (t.dataset.ccancel) return closeCount(false);
+    if (t.dataset.cdone) return closeCount(true);
+    if (t.dataset.cstep && state.countFor) {
+      const f = state.countFor;
+      f.n = Math.max(0, Math.round((f.n + Number(t.dataset.cstep)) * 100) / 100);
+      return fillCount();
+    }
+    if (t.dataset.cunit && state.countFor) { state.countFor.unit = t.dataset.cunit; return fillCount(); }
+    // ทำแล้ว sheet
+    if (t.dataset.cook) return startCook();
+    if (t.dataset.kcancel) { state.cook = null; render(); $("sheet").querySelector(".scroll").scrollTop = 0; return; }
+    if (t.dataset.kdone) return finishCook();
+    if (t.dataset.kout && state.cook) { state.cook.rows[+t.dataset.kout].out = t.dataset.v === "1"; return fillCook(); }
+    if (t.dataset.kstep && state.cook) {
+      const r = state.cook.rows[+t.dataset.kstep];
+      r.to = Math.max(0, Math.round((r.to + Number(t.dataset.d)) * 100) / 100);
+      return fillCook();
+    }
     if (t.dataset.view || t.dataset.goto) {
       state.view = t.dataset.view || t.dataset.goto;
       if (t.dataset.tabgo) { state.menuTab = t.dataset.tabgo; state.cat = ALL; }
@@ -1691,8 +1987,8 @@ button { font: inherit; color: inherit; }
     if (t.dataset.planclear) { state.plan.clear(); state.bought.clear(); savePlan(); saveBought(); return render(); }
     if (t.dataset.own) {
       const n = t.dataset.own;
-      if (state.selected.has(n)) state.selected.delete(n); else { state.selected.add(n); bumpFreq([n]); }
-      saveSelected(); render();
+      if (state.selected.has(n)) setHave(n, false); else { setHave(n, true); bumpFreq([n]); }
+      render();
       const again = [...document.querySelectorAll("#sheetBody [data-own]")].find((b) => b.dataset.own === n);
       if (again) again.focus({ preventScroll: true });
       return;
@@ -1721,11 +2017,44 @@ button { font: inherit; color: inherit; }
       if (t.dataset.ereload) { state.edit = null; render(); return load(); }
     }
     if (t.dataset.recipe) return openSheet(t.dataset.recipe);
-    if (t.id === "clear") { state.selected.clear(); saveSelected(); return render(); }
+    if (t.id === "clear") {
+      const before = snapshot();
+      [...state.selected].forEach((n) => setHave(n, false));
+      showUndo("ล้างของในครัวแล้ว", () => restore(before));
+      return render();
+    }
     if (t.id === "sync") return refresh();
     if (t.id === "noticeAction" && state.notice && state.notice.onAction) return state.notice.onAction();
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.adding) closeAdd(false); else closeSheet(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (state.countFor) closeCount(false); else if (state.adding) closeAdd(false); else closeSheet(); } });
+
+  // press and hold a kitchen chip (or right-click) = open the count sheet instead of removing it
+  let held = false, holdTimer = null, holdAt = null;
+  document.addEventListener("pointerdown", (e) => {
+    const c = e.target.closest("[data-hold]");
+    if (!c) return;
+    holdAt = [e.clientX, e.clientY];
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => { held = true; holdTimer = null; openCount(c.dataset.hold); }, 500);
+  });
+  const cancelHold = () => { clearTimeout(holdTimer); holdTimer = null; };
+  document.addEventListener("pointerup", cancelHold);
+  document.addEventListener("pointercancel", cancelHold);
+  document.addEventListener("pointermove", (e) => {
+    if (holdTimer && holdAt && Math.hypot(e.clientX - holdAt[0], e.clientY - holdAt[1]) > 10) cancelHold();
+  });
+  document.addEventListener("contextmenu", (e) => {
+    const c = e.target.closest("[data-hold]");
+    if (!c) return;
+    e.preventDefault();
+    if (!state.countFor) { cancelHold(); openCount(c.dataset.hold); }
+  });
+  $("countBody").addEventListener("change", (e) => {
+    if (e.target.id === "cOn" && state.countFor) { state.countFor.on = e.target.checked; fillCount(); }
+  });
+  $("countBody").addEventListener("input", (e) => {
+    if (e.target.id === "cN" && state.countFor) { const v = parseFloat(e.target.value); state.countFor.n = Number.isFinite(v) && v >= 0 ? v : 0; }
+  });
   $("aq").addEventListener("input", (e) => { state.addSearch = e.target.value; renderAdd(); });
   $("sheetBody").addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || !state.edit) return;
@@ -1795,6 +2124,22 @@ button { font: inherit; color: inherit; }
   function setRaw(d) {
     state.raw = { recipes: d.recipes, rows: d.rows, ingredients: d.ingredients, options: d.options || [] };
     state.updatedAt = d.updatedAt;
+    if (!Array.isArray(d.pantry)) return; // older Code.js: the kitchen stays in this browser only
+    state.serverPantry = true;
+    // one-time move: the sheet has no kitchen yet but this browser does → send it up
+    let synced = false;
+    try { synced = !!localStorage.getItem(SYNCED_KEY); } catch {}
+    if (!synced && !d.pantry.length && state.selected.size) {
+      for (const n of state.selected) {
+        if (pending.has(n)) continue;
+        const c = state.counts.get(n);
+        pending.set(n, { name: n, have: true, count: c ? c.count : null, unit: c ? c.unit : "" });
+      }
+      savePending();
+    }
+    try { localStorage.setItem(SYNCED_KEY, "1"); } catch {}
+    applyServerPantry(d.pantry);
+    if (pending.size) scheduleSync(0);
   }
   async function load() {
     state.loading = true; render();
@@ -1815,7 +2160,7 @@ button { font: inherit; color: inherit; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "5f8b6ef";
+  const APP_VERSION = "1c13898";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
@@ -1832,8 +2177,9 @@ button { font: inherit; color: inherit; }
   // coming back to the tab after editing the sheet should show the new rows
   let hiddenAt = 0;
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (document.hidden) { hiddenAt = Date.now(); if (pending.size) syncPantry(); return; }
     checkUpdate();
+    if (pending.size) scheduleSync(0);
     if (hiddenAt && Date.now() - hiddenAt > 60000 && !state.loading) load();
   });
 
