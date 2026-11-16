@@ -757,7 +757,9 @@ body.cooking .app { padding-bottom: 180px; }
 .echeck input { width: 20px; height: 20px; accent-color: var(--brand); }
 .esub { display: flex; align-items: center; gap: 10px; }
 .esub span { flex-shrink: 0; font-size: 14px; color: var(--ink-muted); }
-.ing-list li.eaddrow { border-bottom: 0; padding-top: 4px; }
+.ing-list li.eaddrow { border-bottom: 0; padding-top: 4px; flex-direction: column; align-items: stretch; gap: 8px; } /* input row, then chips wrapping below */
+#addSugg .chip { min-height: 40px; padding: 6px 14px; font-size: 14px; }
+#addSugg .chip svg { width: 13px; height: 13px; }
 .eadd-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px dashed var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .eadd-btn svg { width: 14px; height: 14px; }
 .eadd { display: flex; gap: 8px; width: 100%; }
@@ -2574,7 +2576,7 @@ body.cooking .app { padding-bottom: 180px; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "90edbb5";
+  const APP_VERSION = "e21121a";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
