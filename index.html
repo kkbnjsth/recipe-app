@@ -663,6 +663,26 @@ button { font: inherit; color: inherit; }
 .cook-foot { display: flex; gap: 10px; }
 .cook-foot .pill-btn { min-height: 48px; padding: 0 20px; font-size: 15px; }
 .cook-foot .pill-btn:last-child { flex: 1; }
+/* Substitutes in the recipe editor: chips + suggestions; a new name asks its type */
+.esubs { display: flex; flex-direction: column; gap: 8px; }
+.esubs .elabel { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.esubs .ehint { margin: 0; }
+.esubs .chip { min-height: 40px; padding: 6px 14px; font-size: 14px; }
+.esubs .chip svg { width: 13px; height: 13px; }
+.sub-chip { background: var(--sub-bg); color: var(--sub-ink); font-weight: 600; }
+.tagx {
+  margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--surface); box-shadow: inset 0 0 0 1px currentColor;
+  font-size: 10.5px; font-weight: 600; line-height: 17px; opacity: .85;
+}
+.tagx.new { color: var(--accent-ink); }
+.enew {
+  display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px;
+  background: var(--accent-light); color: var(--ink);
+}
+.enew p { margin: 0; font-size: 13px; }
+.enew label { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.enew label > span { width: 52px; flex-shrink: 0; color: var(--accent-ink); font-weight: 600; }
+.enew-btns { display: flex; gap: 8px; justify-content: flex-end; }
 /* Recipe editor: the recipe page itself becomes editable — tap a thing to edit just that thing */
 .ehdr { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
 .ehdr p { margin: 0; font-size: 13px; color: var(--ink-muted); }
@@ -1024,15 +1044,34 @@ button { font: inherit; color: inherit; }
     });
 
     const typeOf = new Map();
-    for (const r of I) { const n = clean(r[0]); if (n) typeOf.set(n, clean(r[1]) || OTHER); }
-    // anything named in a recipe but missing from the master list still gets a chip
-    for (const list of byRecipe.values()) {
-      for (const it of list) {
-        if (!typeOf.has(it.name)) typeOf.set(it.name, OTHER);
-        for (const s of it.subs) if (!typeOf.has(s)) typeOf.set(s, OTHER);
+    // กลุ่ม (วัตถุดิบ!D): a substitute (or a recipe ingredient) can name a group = any item of that group
+    const itemGroup = new Map(); // item → group
+    const members = new Map(); // group → [items]
+    for (const r of I) {
+      const n = clean(r[0]); if (!n) continue;
+      typeOf.set(n, clean(r[1]) || OTHER);
+      const g = clean(r[3]);
+      if (g && g !== n) {
+        itemGroup.set(n, g);
+        if (!members.has(g)) members.set(g, []);
+        members.get(g).push(n);
       }
     }
-    return { recipes, byRecipe, typeOf };
+    // anything named in a recipe but missing from the master list still gets a chip (groups are not things to tick)
+    for (const list of byRecipe.values()) {
+      for (const it of list) {
+        if (!typeOf.has(it.name) && !members.has(it.name)) typeOf.set(it.name, OTHER);
+        for (const s of it.subs) if (!typeOf.has(s) && !members.has(s)) typeOf.set(s, OTHER);
+      }
+    }
+    MEMBERS = members;
+    return { recipes, byRecipe, typeOf, itemGroup, members };
+  }
+  // what in the kitchen satisfies `name`: the item itself, or for a group name, the first item of that group I have
+  let MEMBERS = new Map();
+  function inKitchen(name) {
+    if (state.selected.has(name)) return name;
+    return (MEMBERS.get(name) || []).find((n) => state.selected.has(n)) || null;
   }
 
   // A counted ingredient is compared with the recipe only when the units match (2 ฟอง vs 1 ฟอง);
@@ -1045,8 +1084,12 @@ button { font: inherit; color: inherit; }
       const need = c && c.unit === it.unit ? needOf(it.name, it.unit) : 0;
       const short = need > c?.count ? { haveN: c.count, needN: need, lack: need - c.count } : null;
       if (state.selected.has(it.name) && !short) return { ...it, status: "have" };
-      const sub = it.subs.find((s) => state.selected.has(s));
-      if (sub) return { ...it, status: "have", usedSub: sub };
+      const own = state.selected.has(it.name) ? null : inKitchen(it.name); // recipe names a group (เนื้อวัว)
+      if (own) return { ...it, status: "have", usedSub: own };
+      for (const s of it.subs) { // a substitute: an item, or a group = any item of it
+        const got = inKitchen(s);
+        if (got) return { ...it, status: "have", usedSub: got };
+      }
       if (short) return { ...it, ...short, status: it.optional ? "have" : "short" };
       return { ...it, status: it.optional ? "skip" : "miss" };
     });
@@ -1410,7 +1453,7 @@ button { font: inherit; color: inherit; }
       if (i.usedSub) sub = `ใช้${esc(i.usedSub)}แทน`;
       else if (i.status === "short") sub = `มี ${fmt(i.haveN)} · ขาดอีก ${fmt(i.lack)} ${esc(i.unit)}`;
       else if (i.lack) sub = `มี ${fmt(i.haveN)} ${esc(i.unit)} ไม่พอ แต่ไม่ใส่ก็ได้`;
-      else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map(esc).join(", ")} แทนได้`;
+      else if (i.status === "miss" && i.subs.length) sub = `หรือใช้ ${i.subs.map((s) => (MEMBERS.has(s) ? `${esc(s)} (อะไรก็ได้ในกลุ่ม)` : esc(s))).join(", ")} แทนได้`;
       else if (i.status === "miss") sub = "ยังไม่มี";
       else if (i.status === "skip") sub = "ไม่ใส่ก็ได้";
       else if (i.optional) sub = "ไม่ใส่ก็ได้";
@@ -1597,6 +1640,8 @@ button { font: inherit; color: inherit; }
       orig: name, before,
       f: { name: clean(before[0]), cat: clean(before[1]), time: clean(before[3]), serves: clean(before[4]), steps: clean(before[5]), note: clean(before[7]) },
       items, adds: [], open: null, step: "form", saving: false, error: "",
+      newIng: {}, // name → {type, group}: typed names not in the sheet yet, added to วัตถุดิบ on save
+      subNew: null, // {row, name} while asking the type of a new name
     };
     renderEdit();
     $("sheet").querySelector(".scroll").scrollTop = 0;
@@ -1619,20 +1664,21 @@ button { font: inherit; color: inherit; }
       for (const [label, a, b] of pairs) if (a !== b) out.push({ what: `${it.name}: ${label}`, from: a, to: b, kind: "" });
     }
     for (const a of e.adds) out.push({ what: `เพิ่ม ${a.name}`, from: "", to: amountOf(a.qty.trim(), a.unit) || "(มี)", kind: "add" });
+    for (const x of usedNewIng()) out.push({ what: `วัตถุดิบใหม่ในชีต: ${x.name}`, from: "", to: x.type + (x.group ? ` · กลุ่ม ${x.group}` : ""), kind: "add" });
     return out;
   }
   // checks the server would also make, so mistakes show up before the confirm step
   function editProblems() {
     const e = state.edit;
-    const known = new Set((state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean));
     const names = (state.raw.recipes || []).map((r) => clean(r[0]));
     const n = e.f.name.trim();
     if (!n) return "ชื่อเมนูว่างไม่ได้";
     if (n !== e.orig && names.includes(n)) return `มีเมนูชื่อ "${n}" อยู่แล้ว`;
     for (const k of ["time", "serves"]) if (e.f[k].trim() && !/^\d+(\.\d+)?$/.test(e.f[k].trim())) return "เวลาและจำนวนที่ได้ต้องเป็นตัวเลข";
     for (const it of [...e.items.filter((x) => !x.del), ...e.adds]) {
-      const bad = splitList(it.subs).find((s) => !known.has(s));
+      const bad = splitList(it.subs).find((s) => !isKnown(s));
       if (bad) return `ของแทน "${bad}" ของ${it.name} ไม่มีในแท็บวัตถุดิบ`;
+      if (!isKnown(it.name)) return `ไม่มี "${it.name}" ในแท็บวัตถุดิบ`;
     }
     return "";
   }
@@ -1662,7 +1708,7 @@ button { font: inherit; color: inherit; }
         ${selectHtml(`data-${key}="${i}" data-k="unit" aria-label="หน่วย ${esc(it.name)}"`, it.unit, units, "ไม่มีหน่วย")}
       </div>
       <label class="echeck"><input type="checkbox" data-${key}="${i}" data-k="optional"${it.optional ? " checked" : ""}> ไม่ใส่ก็ได้</label>
-      <label class="esub"><span>ของแทน</span><input data-${key}="${i}" data-k="subs" value="${esc(it.subs)}" placeholder="ไม่มี" aria-label="ของแทน ${esc(it.name)}" list="ingAll" data-enter="1"></label>
+      ${subsEditorHtml(it, k)}
       <button type="button" class="link-btn" data-eopen="">เสร็จ</button>
     </li>`;
   }
@@ -1711,7 +1757,8 @@ button { font: inherit; color: inherit; }
       <section><h3>วัตถุดิบ<small>แตะเพื่อแก้ · × เพื่อลบ</small></h3>
         <ul class="ing-list editing">${e.items.map((it, i) => editRowHtml(it, "i", i, units)).join("")}${e.adds.map((it, i) => editRowHtml(it, "a", i, units)).join("")}
           <li class="eaddrow">${o === "add"
-            ? `<div class="eadd"><input id="eaddName" list="ingNew" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" autocomplete="off" data-focus="1"><datalist id="ingNew">${ingAll.filter((n) => !used.has(n)).map((n) => `<option value="${esc(n)}">`).join("")}</datalist><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>`
+            ? `<div class="eadd"><input id="eaddName" list="ingNew" placeholder="พิมพ์ชื่อวัตถุดิบ" aria-label="ชื่อวัตถุดิบที่จะเพิ่ม" autocomplete="off"${e.subNew && e.subNew.row === "add" ? ` value="${esc(e.subNew.name)}"` : ' data-focus="1"'}><datalist id="ingNew">${[...ingAll, ...Object.keys(e.newIng)].filter((n) => !used.has(n)).map((n) => `<option value="${esc(n)}">`).join("")}</datalist><button type="button" class="pill-btn" data-eadd="1">เพิ่ม</button></div>
+              ${e.subNew && e.subNew.row === "add" ? newIngFormHtml(e.subNew.name, "") : ""}`
             : `<button type="button" class="eadd-btn" data-eopen="add">${ICON.plus}เพิ่มวัตถุดิบ</button>`}</li>
         </ul>
       </section>
@@ -1748,15 +1795,111 @@ button { font: inherit; color: inherit; }
     e.error = "";
     rerenderEdit();
   }
+  // ---- substitutes: chips + suggestions; a name that isn't in the sheet yet becomes a new ingredient on save ----
+  const sheetNames = () => new Set((state.raw.ingredients || []).map((r) => clean(r[0])).filter(Boolean));
+  function allGroups() { // groups in the sheet + groups typed for new ingredients in this edit
+    const g = new Set(MEMBERS.keys());
+    for (const x of Object.values(state.edit ? state.edit.newIng : {})) if (x.group) g.add(x.group);
+    return g;
+  }
+  const isKnown = (n) => sheetNames().has(n) || allGroups().has(n) || !!(state.edit && state.edit.newIng[n]);
+  const editRow = (k) => (k[0] === "a" ? state.edit.adds : state.edit.items)[+k.slice(1)];
+  // ranked: substitutes already used for this ingredient elsewhere → groups of the same type (its own first) → items of its group → same type
+  function suggestSubs(name, current) {
+    const m = model(); if (!m) return [];
+    const out = [], seen = new Set([name, ...current]);
+    const push = (s) => { if (s && !seen.has(s)) { seen.add(s); out.push(s); } };
+    for (const list of m.byRecipe.values()) {
+      for (const r of list) {
+        if (r.name === name) r.subs.forEach(push);
+        else if (r.subs.includes(name)) push(r.name);
+      }
+    }
+    const type = m.typeOf.get(name), g = m.itemGroup.get(name);
+    push(g);
+    const sameType = [...m.typeOf.keys()].filter((n) => n !== name && m.typeOf.get(n) === type);
+    [...new Set(sameType.map((n) => m.itemGroup.get(n)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th")).forEach(push);
+    if (g) (m.members.get(g) || []).forEach(push);
+    sameType.filter((n) => !m.itemGroup.has(n)).sort((a, b) => a.localeCompare(b, "th")).forEach(push);
+    return out.slice(0, 8);
+  }
+  function subLabel(s) {
+    const e = state.edit;
+    const fresh = e && e.newIng[s] ? '<span class="tagx new">ใหม่</span>' : "";
+    return `${esc(s)}${allGroups().has(s) ? '<span class="tagx">ทั้งกลุ่ม</span>' : ""}${fresh}`;
+  }
+  function newIngFormHtml(n, forName) {
+    const m = model(), e = state.edit;
+    const types = TYPE_ORDER.map(([t]) => t).filter((t) => t !== OTHER);
+    const dType = (m && m.typeOf.get(forName)) || e.subNew.type || types[0];
+    const groups = [...allGroups()].sort((a, b) => a.localeCompare(b, "th"));
+    return `<div class="enew" role="group" aria-label="วัตถุดิบใหม่ ${esc(n)}">
+      <p>"${esc(n)}" ยังไม่มีในชีต จะเพิ่มเป็นวัตถุดิบใหม่ตอนบันทึก</p>
+      <label><span>ประเภท</span>${selectHtml(`id="newType" aria-label="ประเภทของ ${esc(n)}"`, e.subNew.type || dType, types)}</label>
+      <label><span>กลุ่ม</span><input id="newGroup" list="groupList" value="${esc(e.subNew.group || "")}" placeholder="ไม่มี (เช่น เนื้อวัว)" autocomplete="off"></label>
+      <datalist id="groupList">${groups.map((g) => `<option value="${esc(g)}">`).join("")}</datalist>
+      <div class="enew-btns"><button type="button" class="pill-btn ghost" data-subnew="no">ยกเลิก</button><button type="button" class="pill-btn" data-subnew="ok">เพิ่ม "${esc(n)}"</button></div>
+    </div>`;
+  }
+  function subsEditorHtml(it, k) {
+    const e = state.edit, list = splitList(it.subs);
+    const sugg = suggestSubs(it.name, list);
+    const opts = [...new Set([...sheetNames(), ...allGroups(), ...Object.keys(e.newIng)])].filter((n) => n !== it.name && !list.includes(n));
+    return `<div class="esubs"><span class="elabel">ของแทน</span>
+      ${list.length ? `<div class="chips">${list.map((s) => `<button type="button" class="chip sub-chip" data-subrm="${esc(s)}" data-row="${k}" aria-label="เอา ${esc(s)} ออกจากของแทน">${subLabel(s)}${ICON.x}</button>`).join("")}</div>` : '<p class="ehint">ยังไม่มีของแทน</p>'}
+      <div class="eadd"><input id="subIn" data-subin="${k}" list="subList" placeholder="พิมพ์ชื่อของแทน หรือกลุ่ม" aria-label="เพิ่มของแทน ${esc(it.name)}" autocomplete="off"${e.subNew && e.subNew.row === k ? "" : " data-focus=\"1\""}><button type="button" class="pill-btn" data-subtyped="${k}">เพิ่ม</button></div>
+      <datalist id="subList">${opts.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>
+      ${e.subNew && e.subNew.row === k ? newIngFormHtml(e.subNew.name, it.name) : ""}
+      ${sugg.length ? `<p class="ehint">แนะนำ แตะเพื่อเพิ่ม</p><div class="chips">${sugg.map((s) => `<button type="button" class="chip add" data-subadd="${esc(s)}" data-row="${k}">${ICON.plus}${subLabel(s)}</button>`).join("")}</div>` : ""}
+    </div>`;
+  }
+  function addSub(k, raw) {
+    const e = state.edit, it = editRow(k), n = clean(raw);
+    if (!it || !n) return;
+    const list = splitList(it.subs);
+    if (n === it.name) e.error = "ของแทนเป็นตัวเองไม่ได้";
+    else if (/[,，、]/.test(n)) e.error = "ใส่ทีละอย่าง";
+    else if (!list.includes(n)) {
+      if (!isKnown(n)) { e.subNew = { row: k, name: n }; return rerenderEdit(); }
+      it.subs = [...list, n].join(", ");
+      e.error = "";
+    }
+    e.subNew = null;
+    rerenderEdit();
+  }
+  function confirmNewIng() {
+    const e = state.edit, s = e.subNew; if (!s) return;
+    const type = $("newType").value, group = clean($("newGroup").value);
+    if (group && sheetNames().has(group)) { e.error = `"${group}" เป็นชื่อวัตถุดิบ ใช้เป็นชื่อกลุ่มไม่ได้`; return rerenderEdit(); }
+    e.newIng[s.name] = { type, group };
+    e.subNew = null; e.error = "";
+    if (s.row === "add") return addMain(s.name);
+    const it = editRow(s.row);
+    it.subs = [...splitList(it.subs), s.name].join(", ");
+    rerenderEdit();
+  }
+  // new ingredients this edit still uses (a dropped chip or row drops its new ingredient too)
+  function usedNewIng() {
+    const e = state.edit, used = new Set();
+    for (const it of [...e.items.filter((x) => !x.del), ...e.adds]) { used.add(it.name); splitList(it.subs).forEach((s) => used.add(s)); }
+    return Object.entries(e.newIng).filter(([n]) => used.has(n)).map(([name, x]) => ({ name, type: x.type, group: x.group }));
+  }
+  function addMain(n) {
+    const e = state.edit;
+    e.adds.push({ name: n, qty: "", unit: "", optional: false, subs: "" });
+    e.open = `a${e.adds.length - 1}`; e.error = "";
+    rerenderEdit();
+  }
+
   function editAdd() {
     const e = state.edit, input = $("eaddName");
     const n = clean(input && input.value);
     if (!n) return input && input.focus();
-    const known = (state.raw.ingredients || []).some((r) => clean(r[0]) === n);
     const back = e.items.find((x) => x.name === n && x.del);
     if (back) back.del = false;
     else if (e.items.some((x) => x.name === n) || e.adds.some((x) => x.name === n)) e.error = `${n} อยู่ในสูตรแล้ว`;
-    else if (!known) e.error = `ไม่มี "${n}" ในแท็บวัตถุดิบ เพิ่มในชีตก่อนแล้วกดโหลดใหม่`;
+    else if (allGroups().has(n)) e.error = `"${n}" เป็นชื่อกลุ่ม ใส่ชื่อของจริง หรือใส่กลุ่มเป็นของแทน`;
+    else if (!isKnown(n)) { e.subNew = { row: "add", name: n }; e.error = ""; return rerenderEdit(); }
     else { e.adds.push({ name: n, qty: "", unit: "", optional: false, subs: "" }); e.error = ""; }
     if (!e.error) e.open = back ? null : `a${e.adds.length - 1}`; // new row opens so you can fill the amount
     rerenderEdit();
@@ -1777,6 +1920,7 @@ button { font: inherit; color: inherit; }
       recipe: { before: e.before, after },
       rows: e.items.map((it) => ({ row: it.row, before: it.before, after: it.del ? null : rowAfter(it, it.before) })),
       add: e.adds.map((it) => rowAfter(it, null)),
+      newIngredients: usedNewIng(),
     };
     e.saving = true; e.error = ""; e.conflict = false; renderEdit();
     try {
@@ -1999,6 +2143,15 @@ button { font: inherit; color: inherit; }
       if (t.dataset.edel) { const it = e.items[+t.dataset.edel]; it.del = !it.del; e.open = null; return rerenderEdit(); }
       if (t.dataset.aundo) { e.adds.splice(+t.dataset.aundo, 1); e.open = null; return rerenderEdit(); }
       if (t.dataset.eadd) return editAdd();
+      if (t.dataset.subrm) {
+        const it = editRow(t.dataset.row);
+        it.subs = splitList(it.subs).filter((s) => s !== t.dataset.subrm).join(", ");
+        return rerenderEdit();
+      }
+      if (t.dataset.subadd) return addSub(t.dataset.row, t.dataset.subadd);
+      if (t.dataset.subtyped) return addSub(t.dataset.subtyped, $("subIn") && $("subIn").value);
+      if (t.dataset.subnew === "ok") return confirmNewIng();
+      if (t.dataset.subnew === "no") { e.subNew = null; return rerenderEdit(); }
       if ("eopen" in t.dataset) return editOpen(t.dataset.eopen);
       if (t.dataset.ecancel) {
         if (editChanges().length && !confirm("ทิ้งสิ่งที่แก้ไว้ในสูตรนี้?")) return;
@@ -2059,6 +2212,8 @@ button { font: inherit; color: inherit; }
   $("sheetBody").addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || !state.edit) return;
     if (ev.target.id === "eaddName") { ev.preventDefault(); editAdd(); }
+    else if (ev.target.dataset.subin) { ev.preventDefault(); addSub(ev.target.dataset.subin, ev.target.value); }
+    else if (ev.target.id === "newGroup") { ev.preventDefault(); confirmNewIng(); }
     else if (ev.target.dataset.enter) { ev.preventDefault(); state.edit.open = null; rerenderEdit(); }
   });
 
@@ -2160,7 +2315,7 @@ button { font: inherit; color: inherit; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "1c13898";
+  const APP_VERSION = "7c28235";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
