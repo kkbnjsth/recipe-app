@@ -663,6 +663,45 @@ button { font: inherit; color: inherit; }
 .cook-foot { display: flex; gap: 10px; }
 .cook-foot .pill-btn { min-height: 48px; padding: 0 20px; font-size: 15px; }
 .cook-foot .pill-btn:last-child { flex: 1; }
+/* เริ่มทำ: pick what this round uses; "กำลังทำ" card in the recipe and a bar above the nav */
+.scale { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-muted); }
+.prep-list { list-style: none; margin: 0; padding: 0; }
+.prep-row { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.prep-row:last-child { border-bottom: 0; }
+.prep-top { display: flex; align-items: center; gap: 10px; }
+.prep-top .n { font-weight: 600; }
+.prep-top .ld { flex: 1; min-width: 16px; margin-top: 6px; border-bottom: 2px dotted var(--line); }
+.prep-top .q { font-family: var(--font-head); font-style: italic; white-space: nowrap; }
+.prep-row.lack .prep-top .n { color: var(--accent-ink); }
+.prep-row .chips { gap: 6px; }
+.tagx.miss { color: var(--accent-ink); }
+.filter .tagx { background: transparent; }
+.filter[aria-pressed="true"] .tagx.miss { color: inherit; }
+.cooking-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 0 0 1.5px var(--brand); }
+.cooking-card h3 { margin: 0; }
+.cook-uses { list-style: none; margin: 0; padding: 0; }
+.cook-uses li { display: flex; align-items: center; gap: 10px; min-height: 40px; border-bottom: 1px solid var(--line-soft); }
+.cook-uses li:last-child { border-bottom: 0; }
+.cook-uses .n small { display: block; font-size: 12px; color: var(--sub-ink); }
+.cook-uses .ld { flex: 1; min-width: 16px; margin-top: 6px; border-bottom: 2px dotted var(--line); }
+.cook-uses .q { font-family: var(--font-head); font-style: italic; white-space: nowrap; }
+.cooking-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 19;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 32px), 420px); min-height: 48px; display: flex; align-items: center; gap: 10px;
+  padding: 0 14px 0 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--brand); color: var(--on-brand); font: inherit; font-size: 14px; text-align: left;
+  box-shadow: var(--shadow-nav);
+}
+.cooking-bar[hidden] { display: none; }
+body.cooking .app { padding-bottom: 180px; }
+.cooking-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+.cooking-bar .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cooking-bar .go { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; }
+.cooking-bar .go svg { width: 14px; height: 14px; }
+.cooking-bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .cooking-bar .dot { animation: none; } }
 /* Substitutes in the recipe editor: chips + suggestions; a new name asks its type */
 .esubs { display: flex; flex-direction: column; gap: 8px; }
 .esubs .elabel { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
@@ -795,6 +834,7 @@ button { font: inherit; color: inherit; }
   <button type="button" id="navShop" data-view="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="lbl">ซื้อ</span><span class="pill num alert" id="pillShop"></span></button>
 </nav>
 
+<button type="button" class="cooking-bar" id="cookingBar" hidden></button>
 <div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastUndo">เลิกทำ</button></div>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -840,6 +880,8 @@ button { font: inherit; color: inherit; }
   const SYNCED_KEY = "recipe-finder:pantry-synced"; // set once the server has the kitchen (one-time move from localStorage)
   // types that a recipe usually uses up — preset to "หมดแล้ว" in the ทำแล้ว sheet; everything else is preset to "ยังเหลือ"
   const USED_UP_TYPES = new Set(["เนื้อสัตว์", "อาหารทะเล", "ผัก", "ผลไม้"]);
+  // เริ่มทำ: what this round really uses (chosen before cooking), kept on this device until ทำเสร็จ/ยกเลิก
+  const COOKING_KEY = "recipe-finder:cooking";
 
   // Apps Script deployment "Anyone" (Code.js doPost) — the page itself is on GitHub Pages
   const API_URL = "https://script.google.com/macros/s/AKfycbxLo1n0SuPjIpr0CTiRSFnpjIHZYSZEq6bkb555f3ye1eBsCs-UsAEzTKega9Fz3ynE3Q/exec";
@@ -893,6 +935,8 @@ button { font: inherit; color: inherit; }
     serverPantry: false, // true once the server answered with a kitchen (new Code.js deployed)
     countFor: null, // count sheet: {name, on, n, unit, units}
     cook: null, // ทำแล้ว sheet: {name, rows}
+    prep: null, // เริ่มทำ sheet: {name, scale, rows: [{for, qty, unit, optional, opts, use}]}
+    cooking: loadCooking(), // {name, scale, at, uses: [{name, for, qty, unit}], skipped: [names]}
     plan: new Set(loadPlan()),
     bought: new Set(loadBought()),
     freq: loadFreq(),
@@ -931,6 +975,12 @@ button { font: inherit; color: inherit; }
   function bumpFreq(names) {
     for (const n of names) state.freq[n] = freqOf(n) + 1;
     try { localStorage.setItem(FREQ_KEY, JSON.stringify(state.freq)); } catch {}
+  }
+  function loadCooking() {
+    try { const c = JSON.parse(localStorage.getItem(COOKING_KEY) || "null"); return c && c.name && Array.isArray(c.uses) ? c : null; } catch { return null; }
+  }
+  function saveCooking() {
+    try { if (state.cooking) localStorage.setItem(COOKING_KEY, JSON.stringify(state.cooking)); else localStorage.removeItem(COOKING_KEY); } catch {}
   }
   function loadCounts() {
     try {
@@ -1191,8 +1241,9 @@ button { font: inherit; color: inherit; }
     renderAdd(m);
     if (state.openRecipe && !state.edit) { // the editor keeps its own form while open
       const hit = results.find((x) => x.recipe.name === state.openRecipe);
-      if (!hit) closeSheet(); else if (state.cook) fillCook(); else fillSheet(hit);
+      if (!hit) closeSheet(); else if (state.cook) fillCook(); else if (state.prep) fillPrep(); else fillSheet(hit);
     }
+    renderCookingBar();
     if (state.countFor) fillCount();
   }
 
@@ -1480,7 +1531,7 @@ button { font: inherit; color: inherit; }
         </div>
       </div>
       ${x.items.length ? `<section><h3>วัตถุดิบ<small>${x.level === "ready" ? "มีครบ" : `ขาด ${x.missing.length} อย่าง`}</small></h3><ul class="ing-list">${x.items.map(rowHtml).join("")}</ul></section>` : ""}
-      ${cookNames(x).length ? `<button type="button" class="pill-btn wide cook-btn" data-cook="1">${ICON.check}ทำเมนูนี้แล้ว</button>` : ""}
+      ${cookActionsHtml(x)}
       ${x.level !== "ready" && x.missing.length ? `<button type="button" class="pill-btn wide ${state.plan.has(r.name) ? "ghost" : ""}" data-plan="${esc(r.name)}">${state.plan.has(r.name) ? "เอาออกจากรายการซื้อของ" : "ใส่รายการซื้อของ"}</button>` : ""}
       ${r.steps ? `<section><h3>วิธีทำ${steps > 1 ? `<small>${steps} ขั้น</small>` : ""}</h3>${stepsHtml(r.steps)}</section>` : ""}
       ${r.tags.length ? `<section><h3>แท็ก</h3><div class="tags">${r.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
@@ -1511,6 +1562,8 @@ button { font: inherit; color: inherit; }
     }
     state.openRecipe = null;
     state.cook = null;
+    state.prep = null;
+    renderCookingBar();
     const sheet = $("sheet"), scrim = $("scrim");
     sheet.classList.remove("open"); scrim.classList.remove("open");
     setTimeout(() => { if (!state.openRecipe) { sheet.hidden = true; if (!state.adding) scrim.hidden = true; } }, 300);
@@ -1568,6 +1621,87 @@ button { font: inherit; color: inherit; }
     render();
   }
 
+  // ---------- เริ่มทำ: confirm what this round really uses, then ทำเสร็จ takes exactly that ----------
+  const SCALES = [0.5, 1, 2];
+  const scaleText = (s) => (s === 0.5 ? "½" : fmt(s));
+  function cookActionsHtml(x) {
+    const c = state.cooking;
+    if (c && c.name === x.recipe.name) {
+      const q = (u) => (u.qty != null ? amountOf(fmt(u.qty), u.unit) : "");
+      return `<section class="card cooking-card"><h3>กำลังทำรอบนี้<small>${c.scale !== 1 ? `ทำ ×${scaleText(c.scale)}` : "ตามสูตร"}</small></h3>
+        <ul class="cook-uses">${c.uses.map((u) => `<li><span class="n">${esc(u.name)}${u.name !== u.for ? `<small>แทน${esc(u.for)}</small>` : ""}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(q(u))}</span></li>`).join("")}</ul>
+        ${c.skipped.length ? `<p class="note">ไม่ใส่รอบนี้: ${c.skipped.map(esc).join(", ")}</p>` : ""}
+        <div class="cook-foot"><button type="button" class="pill-btn ghost" data-cookabort="1">ยกเลิกการทำ</button><button type="button" class="pill-btn" data-cook="1">${ICON.check}ทำเสร็จแล้ว</button></div>
+      </section>`;
+    }
+    if (!x.items.length) return "";
+    const busy = c ? `<p class="note">กำลังทำ${esc(c.name)}อยู่ เริ่มเมนูนี้แล้วเมนูนั้นจะถูกยกเลิก</p>` : "";
+    return `${busy}<div class="cook-foot">${cookNames(x).length ? '<button type="button" class="pill-btn ghost" data-cook="1">ทำไปแล้ว</button>' : ""}<button type="button" class="pill-btn" data-prep="1">เริ่มทำ</button></div>`;
+  }
+  // choices for one recipe row: the ingredient itself, then every kitchen item that can stand in for it
+  function prepRow(it) {
+    const opts = [it.name];
+    for (const s of it.subs) {
+      if (state.selected.has(s)) opts.push(s);
+      for (const n of MEMBERS.get(s) || []) if (state.selected.has(n)) opts.push(n);
+    }
+    for (const n of MEMBERS.get(it.name) || []) if (state.selected.has(n)) opts.push(n); // the recipe names a group
+    const uniq = [...new Set(opts)];
+    let use = it.status === "skip" ? null : it.usedSub || it.name;
+    return { for: it.name, qty: it.qty, unit: it.unit, optional: it.optional, opts: uniq, use, status: it.status };
+  }
+  function startPrep() {
+    const m = model(); if (!m) return;
+    const r = m.recipes.find((y) => y.name === state.openRecipe); if (!r) return;
+    state.prep = { name: r.name, scale: 1, rows: evaluate(r, m.byRecipe).items.map(prepRow) };
+    fillPrep();
+    $("sheet").querySelector(".scroll").scrollTop = 0;
+  }
+  const prepQty = (r, s) => { const n = toNum(r.qty); return n != null ? amountOf(fmt(n * s), r.unit) : amountOf(r.qty, r.unit); };
+  function fillPrep() {
+    const k = state.prep;
+    const row = (r, i) => {
+      const lack = r.use === r.for && !state.selected.has(r.for);
+      const chip = (o) => `<button type="button" class="filter" data-ppick="${i}" data-v="${esc(o)}" aria-pressed="${r.use === o}">${esc(o)}${o !== r.for ? '<span class="tagx">แทน</span>' : !state.selected.has(o) ? '<span class="tagx miss">ไม่มีในครัว</span>' : ""}</button>`;
+      return `<li class="prep-row${lack ? " lack" : ""}">
+        <div class="prep-top"><span class="n">${esc(r.for)}</span><span class="ld" aria-hidden="true"></span><span class="q">${esc(prepQty(r, k.scale))}</span></div>
+        <div class="chips" role="group" aria-label="รอบนี้ใช้อะไรแทน${esc(r.for)}">${r.opts.map(chip).join("")}${r.optional ? `<button type="button" class="filter" data-ppick="${i}" data-v="" aria-pressed="${r.use == null}">ไม่ใส่</button>` : ""}</div>
+      </li>`;
+    };
+    const lacks = k.rows.filter((r) => r.use === r.for && !state.selected.has(r.for)).length;
+    $("sheetBody").innerHTML = `
+      <div class="ehdr"><span class="folio">เริ่มทำ${esc(k.name)}</span><h2 id="sheetTitle">รอบนี้ใช้อะไรบ้าง?</h2><p>เลือกไว้ให้ตามของในครัวแล้ว แตะเปลี่ยนได้ ตอนทำเสร็จจะหักตามนี้</p></div>
+      <div class="scale" role="group" aria-label="ทำกี่เท่าของสูตร"><span>ทำ</span>${SCALES.map((s) => `<button type="button" class="filter" data-pscale="${s}" aria-pressed="${k.scale === s}">×${scaleText(s)}</button>`).join("")}</div>
+      <ul class="prep-list">${k.rows.map(row).join("")}</ul>
+      ${lacks ? `<p class="eerr">ยังไม่มีในครัว ${lacks} อย่าง ถ้ามีแล้วแต่ยังไม่ได้ติ๊กก็เริ่มได้เลย</p>` : ""}
+      <div class="cook-foot"><button type="button" class="pill-btn ghost" data-pcancel="1">ยกเลิก</button><button type="button" class="pill-btn" data-pgo="1">เริ่มทำ</button></div>`;
+  }
+  function confirmPrep() {
+    const k = state.prep; if (!k) return;
+    state.cooking = {
+      name: k.name, scale: k.scale, at: Date.now(),
+      uses: k.rows.filter((r) => r.use).map((r) => {
+        const n = toNum(r.qty);
+        return { name: r.use, for: r.for, qty: n != null ? n * k.scale : null, unit: r.unit };
+      }),
+      skipped: k.rows.filter((r) => !r.use).map((r) => r.for),
+    };
+    saveCooking();
+    state.prep = null;
+    render();
+    $("sheet").querySelector(".scroll").scrollTop = 0;
+    showToast("เริ่มทำแล้ว ทำเสร็จกด ทำเสร็จแล้ว");
+  }
+  function renderCookingBar() {
+    const bar = $("cookingBar"), c = state.cooking;
+    const show = c && state.openRecipe !== c.name;
+    bar.hidden = !show;
+    document.body.classList.toggle("cooking", !!show);
+    if (!show) return;
+    bar.dataset.recipe = c.name;
+    bar.innerHTML = `<span class="dot" aria-hidden="true"></span><span class="t">กำลังทำ <b>${esc(c.name)}</b></span><span class="go">ดู${ICON.chev}</span>`;
+  }
+
   // ---------- ทำแล้ว: after cooking, take what ran out out of the kitchen ----------
   // what this recipe took from the kitchen: the ingredient itself, or the substitute that was used
   function cookNames(x) {
@@ -1581,12 +1715,15 @@ button { font: inherit; color: inherit; }
   function startCook() {
     const m = model(); if (!m) return;
     const r = m.recipes.find((y) => y.name === state.openRecipe); if (!r) return;
-    const list = m.byRecipe.get(r.name) || [];
-    state.cook = { name: r.name, rows: cookNames(evaluate(r, m.byRecipe)).map((n) => {
+    // after เริ่มทำ: exactly what was confirmed (with its amounts); otherwise a guess from the kitchen
+    const plan = state.cooking && state.cooking.name === r.name ? state.cooking : null;
+    const uses = plan ? plan.uses : (m.byRecipe.get(r.name) || []).map((it) => ({ name: it.name, qty: toNum(it.qty), unit: it.unit }));
+    const names = plan ? [...new Set(plan.uses.map((u) => u.name))].filter((n) => state.selected.has(n)) : cookNames(evaluate(r, m.byRecipe));
+    state.cook = { name: r.name, rows: names.map((n) => {
       const type = groupOf(m.typeOf.get(n));
       const c = state.counts.get(n);
       if (!c) return { name: n, type, counted: false, out: USED_UP_TYPES.has(type) };
-      const used = list.reduce((s, it) => s + (it.name === n && it.unit === c.unit ? toNum(it.qty) || 0 : 0), 0);
+      const used = uses.reduce((s, u) => s + (u.name === n && u.unit === c.unit ? u.qty || 0 : 0), 0);
       return { name: n, type, counted: true, from: c.count, used, to: Math.max(0, c.count - used), unit: c.unit };
     }) };
     fillCook();
@@ -1619,6 +1756,7 @@ button { font: inherit; color: inherit; }
       if (r.counted ? r.to <= 0 : r.out) { setHave(r.name, false); out++; }
       else if (r.counted && r.to !== r.from) setHave(r.name, true, r.to, r.unit);
     }
+    if (state.cooking && state.cooking.name === k.name) { state.cooking = null; saveCooking(); }
     closeSheet();
     render();
     showUndo(out ? `อัปเดตครัวแล้ว เอาออก ${out} อย่าง` : "อัปเดตจำนวนในครัวแล้ว", () => restore(before));
@@ -2113,6 +2251,18 @@ button { font: inherit; color: inherit; }
       return fillCount();
     }
     if (t.dataset.cunit && state.countFor) { state.countFor.unit = t.dataset.cunit; return fillCount(); }
+    // เริ่มทำ sheet
+    if (t.dataset.prep) return startPrep();
+    if (t.dataset.pcancel) { state.prep = null; render(); $("sheet").querySelector(".scroll").scrollTop = 0; return; }
+    if (t.dataset.pgo) return confirmPrep();
+    if (t.dataset.pscale && state.prep) { state.prep.scale = Number(t.dataset.pscale); return fillPrep(); }
+    if (t.dataset.ppick && state.prep) { state.prep.rows[+t.dataset.ppick].use = t.dataset.v || null; return fillPrep(); }
+    if (t.dataset.cookabort) {
+      const was = state.cooking;
+      state.cooking = null; saveCooking(); render();
+      showUndo(`ยกเลิกการทำ${was.name}แล้ว`, () => { state.cooking = was; saveCooking(); });
+      return;
+    }
     // ทำแล้ว sheet
     if (t.dataset.cook) return startCook();
     if (t.dataset.kcancel) { state.cook = null; render(); $("sheet").querySelector(".scroll").scrollTop = 0; return; }
@@ -2341,7 +2491,7 @@ button { font: inherit; color: inherit; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "9dd899b";
+  const APP_VERSION = "5c41f7a";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
