@@ -1119,25 +1119,27 @@ body.cooking .app { padding-bottom: 180px; }
   }
   // what in the kitchen satisfies `name`: the item itself, or for a group name, the first item of that group I have
   let MEMBERS = new Map();
-  function inKitchen(name) {
-    if (state.selected.has(name)) return name;
-    return (MEMBERS.get(name) || []).find((n) => state.selected.has(n)) || null;
+  // sel = the kitchen to look in (default: the real one; the ซื้อ page also asks "after shopping")
+  function inKitchen(name, sel = state.selected) {
+    if (sel.has(name)) return name;
+    return (MEMBERS.get(name) || []).find((n) => sel.has(n)) || null;
   }
 
   // A counted ingredient is compared with the recipe only when the units match (2 ฟอง vs 1 ฟอง);
   // other units (260 กรัม of a potato counted in หัว) fall back to "have it or not".
-  function evaluate(recipe, byRecipe) {
+  function evaluate(recipe, byRecipe, kit = state) {
+    const sel = kit.selected;
     const list = byRecipe.get(recipe.name) || [];
     const needOf = (name, unit) => list.reduce((s, r) => s + (r.name === name && r.unit === unit ? toNum(r.qty) || 0 : 0), 0);
     const items = list.map((it) => {
-      const c = state.selected.has(it.name) ? state.counts.get(it.name) : null;
+      const c = sel.has(it.name) ? kit.counts.get(it.name) : null;
       const need = c && c.unit === it.unit ? needOf(it.name, it.unit) : 0;
       const short = need > c?.count ? { haveN: c.count, needN: need, lack: need - c.count } : null;
-      if (state.selected.has(it.name) && !short) return { ...it, status: "have" };
-      const own = state.selected.has(it.name) ? null : inKitchen(it.name); // recipe names a group (เนื้อวัว)
+      if (sel.has(it.name) && !short) return { ...it, status: "have" };
+      const own = sel.has(it.name) ? null : inKitchen(it.name, sel); // recipe names a group (เนื้อวัว)
       if (own) return { ...it, status: "have", usedSub: own };
       for (const s of it.subs) { // a substitute: an item, or a group = any item of it
-        const got = inKitchen(s);
+        const got = inKitchen(s, sel);
         if (got) return { ...it, status: "have", usedSub: got };
       }
       if (short) return { ...it, ...short, status: it.optional ? "have" : "short" };
@@ -1161,6 +1163,15 @@ body.cooking .app { padding-bottom: 180px; }
       map.get(n).push(x.recipe.name);
     }
     return map;
+  }
+
+  // the kitchen once everything on the shopping list is bought; a short count is assumed topped up (like ซื้อเสร็จแล้ว)
+  function kitchenAfterShop(list) {
+    return { selected: new Set([...state.selected, ...list.keys()]), counts: new Map([...state.counts].filter(([n]) => !list.has(n))) };
+  }
+  function resultsAfterShop(m) {
+    const kit = kitchenAfterShop(shoppingList(m.recipes.map((r) => evaluate(r, m.byRecipe))));
+    return m.recipes.map((r) => evaluate(r, m.byRecipe, kit));
   }
 
   // ingredient → [{menu, qty}] still missing for the menus on the shopping list
@@ -1387,7 +1398,8 @@ body.cooking .app { padding-bottom: 180px; }
       </div>`;
 
     if (tab === "all") {
-      return `${searchBox}${seg}${filters}${chapter("ทุกเมนู")}<div class="card list">${list.map(card).join("")}</div>`;
+      return `${searchBox}${seg}${filters}${chapter("ทุกเมนู")}<div class="card list">${list.map(card).join("")}</div>
+        <button type="button" class="pill-btn wide ghost" data-newmenu="1">${ICON.plus}เพิ่มเมนูใหม่</button>`;
     }
 
     if (tab === "ready") {
@@ -1448,7 +1460,32 @@ body.cooking .app { padding-bottom: 180px; }
       ${rows ? `<button type="button" class="pill-btn wide shop-done" data-shopdone="1"${got ? "" : " disabled"}>ซื้อเสร็จแล้ว${got ? ` · ย้าย <span class="num">${got}</span> อย่างเข้าครัว` : ""}</button>` : ""}
     </section>
     <p class="chapter"><i aria-hidden="true"></i>สำหรับเมนู<i aria-hidden="true"></i></p>
-    <div class="card list">${menus.map((n) => `<div class="menu-row"><button type="button" class="menu-card" data-recipe="${esc(n)}"><span class="body"><span class="name">${esc(n)}</span></span><span class="chev">${ICON.chev}</span></button><button type="button" class="add-mini" data-plan="${esc(n)}" aria-pressed="true" aria-label="เอาออกจากรายการซื้อ: ${esc(n)}">เอาออก</button></div>`).join("")}</div>`;
+    <div class="card list">${menus.map((n) => `<div class="menu-row"><button type="button" class="menu-card" data-recipe="${esc(n)}"><span class="body"><span class="name">${esc(n)}</span></span><span class="chev">${ICON.chev}</span></button><button type="button" class="add-mini" data-plan="${esc(n)}" aria-pressed="true" aria-label="เอาออกจากรายการซื้อ: ${esc(n)}">เอาออก</button></div>`).join("")}</div>
+    ${afterShopHtml(results, list)}`;
+  }
+
+  // the list read backwards: what else the kitchen can make once it is bought, and the one extra thing worth grabbing
+  function afterShopHtml(results, list) {
+    const m = model(); if (!m || !list.size) return "";
+    const after = resultsAfterShop(m);
+    const readyNow = new Set(results.filter((x) => x.level === "ready").map((x) => x.recipe.name));
+    const bonus = after.filter((x) => x.level === "ready" && !readyNow.has(x.recipe.name) && !state.plan.has(x.recipe.name))
+      .sort((a, b) => a.recipe.name.localeCompare(b.recipe.name, "th"));
+    const now = new Map(results.map((x) => [x.recipe.name, x]));
+    const bonusRows = bonus.map((x) => {
+      const uses = (now.get(x.recipe.name)?.missing || []).map((i) => i.name);
+      return `<div class="menu-row"><button type="button" class="menu-card" data-recipe="${esc(x.recipe.name)}"><span class="body"><span class="name">${esc(x.recipe.name)}</span>${uses.length ? `<span class="need">ใช้ ${uses.map(esc).join(", ")} ที่จะซื้อ</span>` : ""}</span><span class="chev">${ICON.chev}</span></button><button type="button" class="add-mini" data-plan="${esc(x.recipe.name)}" aria-pressed="false" aria-label="ใส่รายการซื้อ: ${esc(x.recipe.name)}">+ รายการ</button></div>`;
+    }).join("");
+    const one = [...unlockMap(after)]
+      .sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], "th"))
+      .slice(0, 5);
+    const oneHtml = one.length ? `<section class="card tool unlock">
+      <div class="tool-head"><h2>หยิบเพิ่มอีกอย่าง</h2></div>
+      <p class="tool-sub">ซื้อตามรายการแล้ว ขาดอีกชิ้นเดียวก็ทำเมนูพวกนี้ได้</p>
+      ${one.map(([name, ms]) => `<div class="tool-row"><div class="t"><b>${esc(name)}</b><small>ได้อีก <span class="num">${ms.length}</span> เมนู: ${ms.map(esc).join(", ")}</small></div>
+        <button type="button" class="pill-btn" data-unlock="${esc(name)}" data-after="1">${ICON.plus}รายการซื้อ</button></div>`).join("")}
+    </section>` : "";
+    return `${bonusRows ? `<p class="chapter"><i aria-hidden="true"></i>ซื้อครบแล้ว ทำได้อีก<i aria-hidden="true"></i></p><div class="card list">${bonusRows}</div>` : ""}${oneHtml}`;
   }
 
   // one missing ingredient → the menus it completes; most menus first
@@ -1784,6 +1821,26 @@ body.cooking .app { padding-bottom: 180px; }
     renderEdit();
     $("sheet").querySelector(".scroll").scrollTop = 0;
   }
+  // a menu not in the sheet yet: same editor on a blank draft (name, หมวด, วัตถุดิบ — the rest later via แก้ไขสูตร)
+  const NEW_MENU = "\u0000new"; // state.openRecipe while the new-menu sheet is open (never a real name)
+  function startNewMenu() {
+    const m = model(); if (!m) return;
+    const blank = new Array(8).fill("");
+    state.openRecipe = NEW_MENU;
+    lastFocus = document.activeElement;
+    state.edit = {
+      orig: null, isNew: true, before: blank,
+      f: { name: "", cat: "", time: "", serves: "", steps: "", note: "" },
+      items: [], adds: [], open: "name", step: "form", saving: false, error: "",
+      newIng: {}, subNew: null,
+    };
+    renderEdit();
+    const sheet = $("sheet"), scrim = $("scrim");
+    sheet.hidden = false; scrim.hidden = false;
+    sheet.querySelector(".scroll").scrollTop = 0;
+    requestAnimationFrame(() => { sheet.classList.add("open"); scrim.classList.add("open"); });
+    const f = $("sheetBody").querySelector("[data-focus]"); if (f) f.focus({ preventScroll: true });
+  }
   const REC_FIELDS = [["name", 0, "ชื่อเมนู"], ["cat", 1, "หมวด"], ["time", 3, "เวลา (นาที)"], ["serves", 4, "จำนวนที่ได้ (ที่)"], ["steps", 5, "ขั้นตอน"], ["note", 7, "หมายเหตุ"]];
   const amountOf = (qty, unit) => [qty, unit].filter(Boolean).join(" ");
   const normList = (s) => splitList(s).join(", ");
@@ -1793,7 +1850,7 @@ body.cooking .app { padding-bottom: 180px; }
     const out = [];
     for (const [k, c, label] of REC_FIELDS) {
       const a = clean(e.before[c]), b = e.f[k].trim();
-      if (a !== b) out.push({ what: label, from: a, to: b, kind: k === "steps" || k === "note" ? "long" : "" });
+      if (a !== b) out.push({ what: label, from: a, to: b, kind: e.isNew ? "add" : k === "steps" || k === "note" ? "long" : "" });
     }
     for (const it of e.items) {
       if (it.del) { out.push({ what: `ลบ ${it.name}`, from: amountOf(clean(it.before[2]), clean(it.before[3])) || "(มี)", to: "", kind: "del" }); continue; }
@@ -1857,7 +1914,7 @@ body.cooking .app { padding-bottom: 180px; }
   function updateBar() {
     const bar = $("ebar"); if (!bar) return;
     bar.innerHTML = barHtml(); bar.hidden = !bar.innerHTML;
-    const c = $("ecancel"); if (c) c.textContent = editChanges().length ? "ยกเลิก" : "เสร็จ";
+    const c = $("ecancel"); if (c) c.textContent = state.edit.isNew || editChanges().length ? "ยกเลิก" : "เสร็จ";
   }
   function renderEdit() {
     const e = state.edit; if (!e) return;
@@ -1866,7 +1923,7 @@ body.cooking .app { padding-bottom: 180px; }
       const ch = editChanges();
       const val = (v) => (v ? esc(v) : '<i>ว่าง</i>');
       body.innerHTML = `
-        <div class="ehdr"><h2 id="sheetTitle">ตรวจก่อนบันทึก</h2><p>${esc(e.orig)} · เปลี่ยน <span class="num">${ch.length}</span> อย่าง จะเขียนลงชีตและเก็บประวัติไว้ในแท็บ "บันทึกการแก้ไข"</p></div>
+        <div class="ehdr"><h2 id="sheetTitle">ตรวจก่อนบันทึก</h2><p>${e.isNew ? `เมนูใหม่ ${esc(e.f.name.trim())}` : esc(e.orig)} · ${e.isNew ? "เพิ่ม" : "เปลี่ยน"} <span class="num">${ch.length}</span> อย่าง จะเขียนลงชีตและเก็บประวัติไว้ในแท็บ "บันทึกการแก้ไข"</p></div>
         <ul class="diff">${ch.map((c) => `<li class="${c.kind}"><b>${esc(c.what)}</b>${c.kind === "del" ? `<span class="from">${val(c.from)}</span>` : c.kind === "add" ? `<span class="to">${val(c.to)}</span>` : `<span class="from">${val(c.from)}</span><span class="arr" aria-label="เปลี่ยนเป็น">→</span><span class="to">${val(c.to)}</span>`}</li>`).join("")}</ul>
         ${e.error ? `<p class="eerr" role="alert">${esc(e.error)}${e.conflict ? ` <button type="button" class="link-btn" data-ereload="1">โหลดข้อมูลใหม่</button>` : ""}</p>` : ""}
         <div class="ebar two"><button type="button" class="pill-btn ghost" data-eback="1"${e.saving ? " disabled" : ""}>กลับไปแก้</button><button type="button" class="pill-btn" data-esave="1"${e.saving ? " disabled" : ""}>${e.saving ? "กำลังบันทึก…" : "ยืนยันบันทึก"}</button></div>`;
@@ -1884,10 +1941,10 @@ body.cooking .app { padding-bottom: 180px; }
         : e.f[k] ? showHtml(e.f[k]) : `<p class="note">${emptyText}</p>`}</section>`;
     body.innerHTML = `
       <div class="dhead editing">
-        <div class="dtop"><span class="folio">กำลังแก้ไข · แตะตรงที่จะแก้</span><button type="button" class="dedit" id="ecancel" data-ecancel="1">${editChanges().length ? "ยกเลิก" : "เสร็จ"}</button></div>
-        ${o === "name" ? `<input class="ename" data-f="name" value="${esc(e.f.name)}" aria-label="ชื่อเมนู" data-enter="1" data-focus="1" autocomplete="off">`
-          : `<button type="button" class="ename-btn" data-eopen="name"><h2 id="sheetTitle">${esc(e.f.name || "—")}</h2></button>`}
-        <div class="facts">${fact("time", "เวลา", "นาที")}${fact("serves", "จำนวน", "ที่")}${fact("cat", "หมวด", "")}</div>
+        <div class="dtop"><span class="folio">${e.isNew ? "เมนูใหม่ · ใส่ชื่อ หมวด และวัตถุดิบ" : "กำลังแก้ไข · แตะตรงที่จะแก้"}</span><button type="button" class="dedit" id="ecancel" data-ecancel="1">${e.isNew || editChanges().length ? "ยกเลิก" : "เสร็จ"}</button></div>
+        ${o === "name" ? `<input class="ename" data-f="name" value="${esc(e.f.name)}" placeholder="ชื่อเมนู" aria-label="ชื่อเมนู" data-enter="1" data-focus="1" autocomplete="off">`
+          : `<button type="button" class="ename-btn" data-eopen="name"><h2 id="sheetTitle">${esc(e.f.name || (e.isNew ? "แตะเพื่อใส่ชื่อเมนู" : "—"))}</h2></button>`}
+        <div class="facts">${e.isNew ? "" : `${fact("time", "เวลา", "นาที")}${fact("serves", "จำนวน", "ที่")}`}${fact("cat", "หมวด", "")}</div>
       </div>
       <section><h3>วัตถุดิบ<small>แตะเพื่อแก้ · × เพื่อลบ</small></h3>
         <ul class="ing-list editing">${e.items.map((it, i) => editRowHtml(it, "i", i, units)).join("")}${e.adds.map((it, i) => editRowHtml(it, "a", i, units)).join("")}
@@ -1898,8 +1955,8 @@ body.cooking .app { padding-bottom: 180px; }
             : `<button type="button" class="eadd-btn" data-eopen="add">${ICON.plus}เพิ่มวัตถุดิบ</button>`}</li>
         </ul>
       </section>
-      ${textBlock("steps", "วิธีทำ", 6, "ยังไม่มีขั้นตอน", stepsHtml)}
-      ${textBlock("note", "หมายเหตุ", 2, "ไม่มี", (t) => `<p class="note">${esc(t)}</p>`)}
+      ${e.isNew ? `<p class="ehint">วิธีทำ เวลา และหมายเหตุ ใส่ทีหลังได้ที่ปุ่ม "แก้ไขสูตร"</p>` : `${textBlock("steps", "วิธีทำ", 6, "ยังไม่มีขั้นตอน", stepsHtml)}
+      ${textBlock("note", "หมายเหตุ", 2, "ไม่มี", (t) => `<p class="note">${esc(t)}</p>`)}`}
       ${e.error ? `<p class="eerr" role="alert">${esc(e.error)}</p>` : ""}
       <div class="ebar" id="ebar"></div>`;
     updateBar();
@@ -2080,7 +2137,7 @@ body.cooking .app { padding-bottom: 180px; }
     };
     const arg = {
       name: e.orig,
-      recipe: { before: e.before, after },
+      recipe: { before: e.isNew ? null : e.before, after },
       rows: e.items.map((it) => ({ row: it.row, before: it.before, after: it.del ? null : rowAfter(it, it.before) })),
       add: e.adds.map((it) => rowAfter(it, null)),
       newIngredients: usedNewIng(),
@@ -2089,11 +2146,11 @@ body.cooking .app { padding-bottom: 180px; }
     try {
       const d = await api("saveRecipe", arg);
       setRaw(d);
-      if (name !== e.orig && state.plan.has(e.orig)) { state.plan.delete(e.orig); state.plan.add(name); savePlan(); }
+      if (!e.isNew && name !== e.orig && state.plan.has(e.orig)) { state.plan.delete(e.orig); state.plan.add(name); savePlan(); }
       state.edit = null;
       state.openRecipe = name;
       render();
-      showToast("บันทึกลงชีตแล้ว");
+      showToast(e.isNew ? "เพิ่มเมนูลงชีตแล้ว" : "บันทึกลงชีตแล้ว");
       $("sheet").querySelector(".scroll").scrollTop = 0;
     } catch (err) {
       const msg = String((err && err.message) || err);
@@ -2289,7 +2346,8 @@ body.cooking .app { padding-bottom: 180px; }
     }
     if (t.dataset.unlock) {
       const m = model(); if (!m) return;
-      const names = unlockMap(m.recipes.map((r) => evaluate(r, m.byRecipe))).get(t.dataset.unlock) || [];
+      const pool = t.dataset.after ? resultsAfterShop(m) : m.recipes.map((r) => evaluate(r, m.byRecipe));
+      const names = unlockMap(pool).get(t.dataset.unlock) || [];
       names.forEach((n) => state.plan.add(n));
       savePlan();
       return render();
@@ -2313,6 +2371,7 @@ body.cooking .app { padding-bottom: 180px; }
       return;
     }
     if (t.dataset.edit) return startEdit(state.openRecipe);
+    if (t.dataset.newmenu) return startNewMenu();
     if (state.edit) {
       const e = state.edit;
       if (t.dataset.edel) { const it = e.items[+t.dataset.edel]; it.del = !it.del; e.open = null; return rerenderEdit(); }
@@ -2491,7 +2550,7 @@ body.cooking .app { padding-bottom: 180px; }
   // The home-screen app on iPhone keeps an old copy of this page. On open / coming back, fetch the live page
   // (bypassing the cache) and, if its version differs, reload under a new ?v= URL so the cache can't answer.
   // "dev" is replaced with the commit hash when the page is copied to recipe-app (see CLAUDE.md).
-  const APP_VERSION = "5c41f7a";
+  const APP_VERSION = "11f256f";
   async function checkUpdate() {
     if (APP_VERSION === "dev" || state.edit || state.adding) return;
     try {
